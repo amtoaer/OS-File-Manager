@@ -6,4 +6,4 @@ set(CMAKE_C_STANDARD 11)
 include_directories(.)
 
 add_executable(OS_File_Manager
-        src/source/main.cpp src/header/superblock.h src/header/system.h src/header/config.h src/header/user.h src/header/dir.h src/header/inode.h src/header/diskblock.h)
+        src/source/main.cpp src/header/superblock.h src/header/system.h src/header/config.h src/header/user.h src/header/dir.h src/header/inode.h src/header/diskblock.h src/source/system.cpp)
