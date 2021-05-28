@@ -35,6 +35,20 @@ struct User {      //用户
     }
 };
 
+struct Doc {
+    char content[BLOCKSIZE];    //文件内容
+    int n;        //已占空间
+};
+
+struct Index {
+    int p[BLOCKSIZE / 4]; //索引集合
+    int n;  //索引总数
+};
+
+union DisBlock { //磁盘块
+    Doc doc;
+    Index index;
+};
 struct DiskBlock {      //磁盘块
     char content[BLOCKSIZE];    //文件内容
     int n;        //已占空间
