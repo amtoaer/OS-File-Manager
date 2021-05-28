@@ -6,6 +6,7 @@
 #define OS_FILE_MANAGER_DIR_H
 
 #include <bits/stdc++.h>
+#include "config.h"
 
 struct SFD_ITEM {
     int type;       //目录 或 文件
@@ -14,13 +15,13 @@ struct SFD_ITEM {
 };
 
 struct MFD_ITEM {
-    int userid;   //用户名
+    int userid;   //用户id
     int dir_id; //目录id
 };
 
 struct SFD {
-    int num;
-    vector <SFD_ITEM> dir;
+    int num;    //sfd_item大小
+    SFD_ITEM dir[DIRNUM];
 
     SFD() {
         num = 0;

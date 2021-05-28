@@ -16,6 +16,8 @@ struct SuperBlock {         //超级块结构
 
     int freedisk_num;        //空闲磁盘块块数
     int freeDiskStack[NICFREE + 1]; //成组链接空闲磁盘块栈
+
+
 };
 
 extern FileSystem FS;    //文件系统
