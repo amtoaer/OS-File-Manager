@@ -13,7 +13,7 @@ struct Doc {
 };
 
 struct Index {
-    int p[BLOCKSIZE / 4]; //索引集合
+    int p[BLOCKSIZE / sizeof(int)]; //索引集合
     int n;  //索引总数
 };
 
