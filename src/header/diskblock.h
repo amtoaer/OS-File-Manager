@@ -5,6 +5,8 @@
 #ifndef OS_FILE_MANAGER_DISKBLOCK_H
 #define OS_FILE_MANAGER_DISKBLOCK_H
 
+#include "config.h"
+
 struct Doc {
     char content[BLOCKSIZE];    //文件内容
     int n;        //已占空间
@@ -15,7 +17,7 @@ struct Index {
     int n;  //索引总数
 };
 
-union DisBlock { //磁盘块
+union DiskBlock { //磁盘块
     Doc doc;
     Index index;
 };
