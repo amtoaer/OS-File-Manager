@@ -19,6 +19,8 @@ private:
 
     int freedisk_num;        //空闲磁盘块块数
     int freeDiskStack[NICFREE + 1]; //成组链接空闲磁盘块栈
+
+
 };
 
 /*
