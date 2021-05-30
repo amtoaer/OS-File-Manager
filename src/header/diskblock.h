@@ -34,6 +34,8 @@ union FileContent { //磁盘块
 };
 
 class DiskBlock {
+    friend class SuperBlock;
+
     FileContent file_cont;
 public:
     DiskBlock() {};
@@ -43,8 +45,6 @@ public:
 
     //获取文本
     void getText(char *str);
-
-    FileContent getContent();
 
     //添加索引
     bool addIndex(int index);

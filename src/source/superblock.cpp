@@ -10,10 +10,9 @@ void SuperBlock::clearFreeDiskStack(int next = -1) {
 }
 
 void SuperBlock::copy(DiskBlock db) {
-    FileContent content = db.getContent();
-    freeDiskStack[0] = content.index.n;
+    freeDiskStack[0] = db.file_cont.index.n;
     for (int i = 1; i <= NICFREE; i++) {
-        freeDiskStack[i] = content.index.p[i - 1];
+        freeDiskStack[i] = db.file_cont.index.p[i - 1];
     }
 }
 
