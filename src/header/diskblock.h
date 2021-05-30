@@ -26,13 +26,29 @@ struct Index {
     }
 };
 
-union DiskBlock { //磁盘块
+union FileContent { //磁盘块
     Doc doc;
     Index index;
 
-    DiskBlock() {
+    FileContent() {}
+};
 
-    }
+class DiskBlock {
+    FileContent file_cont;
+public:
+    DiskBlock() {};
+
+    //写文本
+    void writeText(string text);
+
+    //获取文本
+    void getText(char *str);
+
+    //添加索引
+    bool addIndex(int index);
+
+    //获取磁盘inode索引 以0开始 失败返回-1
+    int getDinodeId(int nth);
 };
 
 #endif //OS_FILE_MANAGER_DISKBLOCK_H
