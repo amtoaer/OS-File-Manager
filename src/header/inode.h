@@ -7,34 +7,87 @@
 
 #include <bits/stdc++.h>
 
+using namespace std;
+
 struct RWCT {    //读写控制块
     int user_id;    //属主id
-    vector<int> read_group; //只读组 存放用户id
-    vector<int> raw_group;  //只写 存放用户id
-    vector<int> invisible_group;    //不可见组 存放用户id
+    list<int> r_group; //只读组 存放用户id
+    list<int> w_group;  //只写组
+    list<int> raw_group;  //读写组
+    list<int> null_group;   //无权限组
 };
 
-struct Inode {            //内存i结点
+//暂时还没想到内存Inode能做什么
+class Inode {            //内存i结点
+private:
     RWCT rwct;          //读写控制表
     int i_size;            //文件大小
     int diskblock_num;  //文件占用磁盘块个数
     int diskblock_id;   //第一块磁盘块id
     int i_count;        //文件的引用数
-    char i_mtime[15];  //文件最后修改时间
-    char i_ctime[15];  //文件创建时间
+    char i_mtime[20];  //文件最后修改时间
+    char i_ctime[20];  //文件创建时间
     //关联文件数? 其他属性？
-
 };
 
-struct Dinode {            //i结点
+class Dinode {            //磁盘i结点
+private:
     RWCT rwct;          //读写控制表
     int i_size;            //文件大小
     int diskblock_num;  //文件占用磁盘块个数
     int diskblock_id;   //第一块磁盘块id
-
-    char i_mtime[15];  //文件最后修改时间
-    char i_ctime[15];  //文件创建时间
+    char i_mtime[20];  //文件最后修改时间
+    char i_ctime[20];  //文件创建时间
     //关联文件数? 其他属性？
+public:
+    Dinode() {
+        i_size = 0;
+        diskblock_num = 1;   //默认一块，存放索引
+    }
+
+    void setRwct(RWCT rwct) {
+        this->rwct = rwct;
+    }
+
+    void setSize(int size) {
+        i_size = size;
+    }
+
+    void setDiskBlockNum(int diskblock_num) {
+        this->diskblock_num = diskblock_num;
+    }
+
+    void setDiskBlockId(int diskblock_id) {
+        this->diskblock_id = diskblock_id;
+    }
+
+    void setModifiedTime(char time[]) {
+        strcpy(i_mtime, time);
+    }
+
+    void setCreatedTime(char time[]) {
+        strcpy(i_ctime, time);
+    }
+
+    int getSize() {
+        return i_size;
+    }
+
+    int getDiskblockNum() {
+        return diskblock_num;
+    }
+
+    int getDiskblockId() {
+        return diskblock_id;
+    }
+
+    char *getModifiedTime() {
+        return i_mtime;
+    }
+
+    char *getCreatedTime() {
+        return i_ctime;
+    }
 
 };
 

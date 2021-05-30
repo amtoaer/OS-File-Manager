@@ -8,32 +8,47 @@
 #include <bits/stdc++.h>
 #include "config.h"
 
+using namespace std;
+
 struct SFD_ITEM {
-    int type;       //目录 或 文件
+    int type;       //FILETYPE:1 DIRTYPE:2
     string name;    //命名
-    int id;         //目录：下一级目录索引  文件：磁盘i结点
-};
+    int id;         //目录：下一级目录索引  文件：磁盘i结点索引
+    SFD_ITEM() {}
 
-struct MFD_ITEM {
-    int userid;   //用户id
-    int dir_id; //目录id
-};
-
-struct SFD {
-    int num;    //sfd_item大小
-    SFD_ITEM dir[DIRNUM];
-
-    SFD() {
-        num = 0;
+    SFD_ITEM(int t, string nam, int i) {
+        type = t;
+        name = nam;
+        id = i;
     }
 };
 
-struct BFD {
-    int ffd_num;        //空闲目录数
-    vector<int> FFD;    //空闲目录id
+class SFD {
+private:
+    int num;    //当前目录下文件或目录总量
+    SFD_ITEM dir[DIRNUM];
+public:
+    SFD() {
+        num = 0;
+    }
 
-    int mfd_num;          //用户总数
-    vector <MFD_ITEM> MFD; //用户目录id
+    //能否添加文件或目录
+    bool canAddItem() {
+        return num < DIRNUM;
+    }
+
+    //添加文件或目录
+    bool addItem(SFD_ITEM sfd_item);
+
+    //获取下一级目录id 失败返回-1
+    int getNextDir(string dirname);
+
+    //获取目录下文件i结点id 失败返回-1
+    int getFileInode(string filename);
+
+    int getNum() {  //获取已存放量
+        return num;
+    }
 
 };
 

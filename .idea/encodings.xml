@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding" native2AsciiForPropertiesFiles="true" defaultCharsetForPropertiesFiles="UTF-8">
+    <file url="file://$PROJECT_DIR$/src/header/config.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/header/dir.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/header/diskblock.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/header/inode.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/header/superblock.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/header/system.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/header/user.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/header/view.h" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/source/dir.cpp" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/source/main.cpp" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/source/superblock.cpp" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/source/system.cpp" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/source/user.cpp" charset="UTF-8" />
+    <file url="PROJECT" charset="UTF-8" />
+  </component>
+</project>
