@@ -44,8 +44,13 @@ public:
     //获取文本
     void getText(char *str);
 
+    FileContent getContent();
+
     //添加索引
     bool addIndex(int index);
+
+    // 拷贝磁盘块
+    void copy(int block[]);
 
     //获取磁盘inode索引 以0开始 失败返回-1
     int getDinodeId(int nth);

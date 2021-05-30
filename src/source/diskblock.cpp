@@ -26,6 +26,13 @@ bool DiskBlock::addIndex(int index) {
     return true;
 }
 
+void DiskBlock::copy(int block[]) {
+    this->file_cont.index.n = block[0];
+    for (int i = 1; i <= NICFREE; i++) {
+        this->file_cont.index.p[i - 1] = block[i];
+    }
+}
+
 int DiskBlock::getDinodeId(int nth) {
     if (nth >= file_cont.index.n)
         return -1;

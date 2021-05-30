@@ -177,3 +177,7 @@ int FileSystem::findFile(string path) {
     }
     return inode_id;
 }
+
+DiskBlock FileSystem::getDiskBlock(int index) {
+    return this->diskBlock[index];
+}

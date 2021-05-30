@@ -60,6 +60,9 @@ public:
     //查找文件 返回i结点id
     int findFile(string path);
 
+    // 返回对应位置的磁盘块
+    DiskBlock getDiskBlock(int index);
+
 };
 
 #endif //OS_FILE_MANAGER_SYSTEM_H
