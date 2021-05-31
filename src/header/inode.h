@@ -6,6 +6,7 @@
 #define OS_FILE_MANAGER_INODE_H
 
 #include <bits/stdc++.h>
+#include <time.h>
 
 using namespace std;
 
@@ -36,8 +37,8 @@ private:
     int i_size;            //文件大小
     int diskblock_num;  //文件占用磁盘块个数
     int diskblock_id;   //第一块磁盘块id
-    char i_mtime[20];  //文件最后修改时间
-    char i_ctime[20];  //文件创建时间
+    time_t mtime;   //文件最后修改时间
+    time_t ctime;   //文件创建时间
     //关联文件数? 其他属性？
 public:
     Dinode() {
@@ -61,12 +62,12 @@ public:
         this->diskblock_id = diskblock_id;
     }
 
-    void setModifiedTime(char time[]) {
-        strcpy(i_mtime, time);
+    void setModifiedTime(time_t new_time) {
+        mtime = new_time;
     }
 
-    void setCreatedTime(char time[]) {
-        strcpy(i_ctime, time);
+    void setCreatedTime(time_t created_time) {
+        ctime = created_time;
     }
 
     int getSize() {
@@ -81,12 +82,12 @@ public:
         return diskblock_id;
     }
 
-    char *getModifiedTime() {
-        return i_mtime;
+    time_t getModifiedTime() {
+        return mtime;
     }
 
-    char *getCreatedTime() {
-        return i_ctime;
+    time_t getCreatedTime() {
+        return ctime;
     }
 
 };

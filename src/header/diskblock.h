@@ -54,6 +54,9 @@ public:
 
     //获取磁盘inode索引 以0开始 失败返回-1
     int getDinodeId(int nth);
+
+    //清空索引
+    void clearIndex();
 };
 
 #endif //OS_FILE_MANAGER_DISKBLOCK_H

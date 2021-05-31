@@ -38,3 +38,7 @@ int DiskBlock::getDinodeId(int nth) {
         return -1;
     return file_cont.index.p[nth];
 }
+
+void DiskBlock::clearIndex() {
+    file_cont.index.n = 0;
+}
