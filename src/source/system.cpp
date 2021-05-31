@@ -82,7 +82,6 @@ bool FileSystem::touch(string filePath) {
 }
 
 bool FileSystem::writeFile(string filePath, string content) {
-    /*
     int inode_id = findFile(filePath);
     if (inode_id < 0) {
         cout << "文件不存在，文件查找失败!" << endl;
@@ -124,15 +123,15 @@ bool FileSystem::writeFile(string filePath, string content) {
     int direct_index = 0; //直接索引块编号
     int one_index = BLOCKIDNUM - 1; //一次间址索引块编号
     int two_index = 2 * BLOCKIDNUM;//二次间址索引块编号
-    int two_index_start = 2 * BLOCKIDNUM + 1;//二次间址
 
     int direct_disk_id; //直接索引磁盘块编号
     int one_disk_id;    //一级间址磁盘块编号
     int two_disk_id;    //二级间址磁盘块编号
+    int two_disk_nth;   //二级间址索引磁盘块编号
 
     int write_start = 0;
     //写入内容到磁盘块
-    for (int i = 0; i < block_num - 1; i++) {
+    for (int i = 0; i < block_num; i++) {
         if (i == direct_index) {
             diNode[inode_id].setSize(len);
             diNode[inode_id].setDiskBlockNum(block_num);
@@ -140,12 +139,9 @@ bool FileSystem::writeFile(string filePath, string content) {
             direct_disk_id = applied_disk[i];
             diskBlock[direct_disk_id].clearIndex();
             //设置修改时间
-            SYSTEMTIME m_time;
-            GetLocalTime(&m_time);
-            char szDateTime[30] = {0};
-            sprintf(szDateTime, "%02d-%02d-%02d %02d:%02d:%02d", m_time.wYear, m_time.wMonth,
-                    m_time.wDay, m_time.wHour, m_time.wMinute, m_time.wSecond);
-            diNode[inode_id].setModifiedTime(szDateTime);
+            time_t timep;
+            time(&timep);
+            diNode[inode_id].setModifiedTime(timep);
         } else if (i < one_index) { //直接索引
             string substr = content.substr(write_start, BLOCKSIZE - 1);
             int disk_id = applied_disk[i];
@@ -166,33 +162,18 @@ bool FileSystem::writeFile(string filePath, string content) {
             two_disk_id = applied_disk[i];
             diskBlock[direct_disk_id].addIndex(two_disk_id);
             diskBlock[two_disk_id].clearIndex();
+        } else if ((i - two_index - 1) % (BLOCKIDNUM + 1) == 0) { //二次间址的索引
+            two_disk_nth = applied_disk[i];
+            diskBlock[two_disk_id].addIndex(two_disk_nth);
+            diskBlock[two_disk_nth].clearIndex();
         } else {
-
+            string substr = content.substr(write_start, BLOCKSIZE - 1);
+            int disk_id = applied_disk[i];
+            diskBlock[disk_id].writeText(substr);
+            write_start += BLOCKSIZE - 1;
+            diskBlock[two_disk_nth].addIndex(disk_id);
         }
     }
-    */
-    /*
-    int index_disk_id = diNode[inode_id].getDiskblockId();
-    for (int i = 0; i < block_num - 1; i++) {
-        if (i < BLOCKIDNUM - 2) {
-            int diskblock_id = 0;  //成组链接获取###########
-            string subs = content.substr(i * BLOCKSIZE, BLOCKSIZE);
-            strcpy(diskBlock[diskblock_id].doc.content, subs.data());
-            diskBlock[diskblock_id].doc.n = BLOCKSIZE;
-
-        }
-    }
-
-    if (block_num <= BLOCKIDNUM - 2) {    //一级索引
-
-
-    } else if (block_num <= 2 * BLOCKIDNUM - 2) { //二级索引
-
-    } else {  //三级索引
-
-    }
-    */
-
     return true;
 }
 
@@ -205,6 +186,7 @@ bool FileSystem::mv(string from, string to) {
 }
 
 bool FileSystem::rm(string filePath, bool isRecursive) {
+
     return true;
 }
 
