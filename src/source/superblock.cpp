@@ -3,6 +3,7 @@
 //
 
 #include "../header/superblock.h"
+#include "../header/system.h"
 
 void SuperBlock::clearFreeDiskStack(int next = -1) {
     freeDiskStack[0] = 1;

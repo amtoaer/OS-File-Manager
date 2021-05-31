@@ -7,7 +7,6 @@
 
 #include <bits/stdc++.h>
 #include "config.h"
-#include "global.h"
 #include "diskblock.h"
 
 using namespace std;
@@ -66,5 +65,7 @@ public:
         return freedisk_num;
     }
 };
+
+extern SuperBlock sb;
 
 #endif //OS_FILE_MANAGER_SUPERBLOCK_H

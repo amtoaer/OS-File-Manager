@@ -14,5 +14,5 @@ struct View {
     string cur_path;//当前路径 /a/b/c
 };
 
-
+extern View view;
 #endif //OS_FILE_MANAGER_VIEW_H

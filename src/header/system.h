@@ -6,7 +6,6 @@
 #define OS_FILE_MANAGER_SYSTEM_H
 
 #include "config.h"
-#include "global.h"
 #include "superblock.h"
 #include "inode.h"
 #include "diskblock.h"
@@ -72,5 +71,7 @@ public:
     DiskBlock getDiskBlock(int index);
 
 };
+
+extern FileSystem fs;
 
 #endif //OS_FILE_MANAGER_SYSTEM_H
