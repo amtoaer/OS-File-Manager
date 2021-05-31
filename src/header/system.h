@@ -28,6 +28,9 @@ private:
     //获取文件所占磁盘块id集合
     vector<int> getFileDiskIds(int inode_id);
 
+    //获取文件内容所占磁盘块id集合
+    vector<int> getFileContentDiskIds(int inode_id);
+
     //计算给定长度文件需要占用的磁盘块
     int calculateDiskNum(int len);
 
@@ -49,6 +52,9 @@ public:
 
     // 写入文件（覆盖）
     bool writeFile(string filePath, string content);
+
+    //读文件
+    string readFile(string filePath);
 
     // 删除文件
     bool rm(string filePath, bool isRecursive);

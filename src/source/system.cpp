@@ -214,6 +214,22 @@ bool FileSystem::writeFile(string filePath, string content) {
     return true;
 }
 
+string FileSystem::readFile(string filePath) {
+    int inode_id = findFile(filePath);
+    if (inode_id < 0) {
+        return "";
+    }
+    vector<int> diskblock_id = getFileContentDiskIds(inode_id);
+    string content = "";
+    char temp[BLOCKSIZE + 1];
+    for (int id:diskblock_id) {
+        diskBlock[id].getText(temp);
+        string substr(temp);
+        content += substr;
+    }
+    return content;
+}
+
 bool FileSystem::cp(string from, string to) {
     return true;
 }
@@ -289,6 +305,7 @@ vector<int> FileSystem::getFileDiskIds(int inode_id) {
             res.push_back(diskBlock[block_id].getDinodeId(i));
         }
         int next_block_id = diskBlock[block_id].getDinodeId(BLOCKIDNUM - 2);
+        res.push_back(next_block_id);
         for (int i = 0; i < block_num - BLOCKIDNUM; i++) {
             res.push_back(diskBlock[next_block_id].getDinodeId(i));
         }
@@ -297,22 +314,45 @@ vector<int> FileSystem::getFileDiskIds(int inode_id) {
             res.push_back(diskBlock[block_id].getDinodeId(i));
         }
         int next_block_id = diskBlock[block_id].getDinodeId(BLOCKIDNUM - 2);
+        res.push_back(next_block_id);
         for (int i = 0; i < BLOCKIDNUM; i++) {
             res.push_back(diskBlock[next_block_id].getDinodeId(i));
         }
         next_block_id = diskBlock[block_id].getDinodeId(BLOCKIDNUM - 1);
+        res.push_back(next_block_id);
         int k = 0;
         for (; k < (block_num - 2 * BLOCKIDNUM - 1) / (BLOCKIDNUM + 1); k++) {
             int nn_block_id = diskBlock[next_block_id].getDinodeId(k);
+            res.push_back(nn_block_id);
             for (int i = 0; i < BLOCKIDNUM; i++) {
                 res.push_back(diskBlock[nn_block_id].getDinodeId(i));
             }
         }
         int rest_num = (block_num - 2 * BLOCKIDNUM - 1) % (BLOCKIDNUM + 1);
-        int nn_block_id = diskBlock[next_block_id].getDinodeId(k);
-        for (int i = 0; i < rest_num - 1; i++) {
-            res.push_back(diskBlock[nn_block_id].getDinodeId(i));
+        if (rest_num > 0) {
+            int nn_block_id = diskBlock[next_block_id].getDinodeId(k);
+            res.push_back(nn_block_id);
+            for (int i = 0; i < rest_num - 1; i++) {
+                res.push_back(diskBlock[nn_block_id].getDinodeId(i));
+            }
         }
+    }
+    return res;
+}
+
+vector<int> FileSystem::getFileContentDiskIds(int inode_id) {
+    vector<int> res;
+    vector<int> temp = getFileDiskIds(inode_id);
+    int id1 = 0;
+    int id2 = BLOCKIDNUM - 1;
+    int id3 = 2 * BLOCKIDNUM;
+    int id4 = 2 * BLOCKIDNUM + 1;
+    //剔除其中的索引块
+    for (int i = 0; i < temp.size(); i++) {
+        if ((i == id1) || (i == id2) || (i == id3) || ((i - id4) % (BLOCKIDNUM + 1) == 0)) {
+            continue;
+        }
+        res.push_back(temp[i]);
     }
     return res;
 }
