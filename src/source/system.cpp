@@ -61,10 +61,16 @@ bool FileSystem::mkdir(string dir) {
     return true;
 }
 
-bool FileSystem::touch(string filePath) {
+bool FileSystem::touch(string filePath, string filename) {
     int cur_dir_id = findDir(filePath);
     if (cur_dir_id < 0) {
         cout << "目录不存在，文件创建失败!" << endl;
+        return false;
+    }
+
+    //检查重名问题
+    if (sfd[cur_dir_id].getFileInode(filename) != -1) {
+        cout << "此位置包含同名文件，文件创建失败!" << endl;
         return false;
     }
 
@@ -106,10 +112,6 @@ bool FileSystem::touch(string filePath) {
     time(&timep);
     diNode[inode_id].setCreatedTime(timep);
     diNode[inode_id].setModifiedTime(timep);
-
-    string filename;
-    cout << "请输入文件名:";
-    cin >> filename;
 
     //添加至目录下
     SFD_ITEM new_file(FILETYPE, filename, inode_id);

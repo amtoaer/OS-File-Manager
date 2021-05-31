@@ -47,7 +47,7 @@ public:
     bool mkdir(string dir);
 
     // 创建文件
-    bool touch(string filePath);
+    bool touch(string filePath, string filename);
 
     // 写入文件（覆盖）
     bool writeFile(string filePath, string content);
