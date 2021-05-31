@@ -6,6 +6,7 @@
 #define OS_FILE_MANAGER_SYSTEM_H
 
 #include "config.h"
+#include "global.h"
 #include "superblock.h"
 #include "inode.h"
 #include "diskblock.h"
@@ -23,8 +24,7 @@ private:
     SFD sfd[SFDNUM];                //目录块
     int root_id = 0;    //根目录默认占用
 
-    //分割字符串
-    vector<string> split(string str, string pattern);
+    string getFullPath(string);
 
 public:
     // 默认初始化
@@ -55,7 +55,10 @@ public:
     bool mv(string from, string to);
 
     //查找目录 返回目录id
-    int findDir(string path);
+    int findDir(vector<string>);
+
+    // 查找目录字符串 返回目录id
+    int findDir(string);
 
     //查找文件 返回i结点id
     int findFile(string path);
