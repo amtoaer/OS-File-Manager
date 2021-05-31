@@ -4,6 +4,7 @@
 
 #include "../header/system.h"
 #include "../header/view.h"
+#include "../header/utils.h"
 #include <bits/stdc++.h>
 
 using namespace std;
@@ -18,7 +19,45 @@ void FileSystem::format() {
     root_id = 0;
 }
 
+
+string FileSystem::getFullPath(string path) {
+    if (path.length() == 0) {
+        return path;
+    }
+    if (path[0] != '/') {   //相对路径
+        return view.cur_path + '/' + path;
+    }
+    return path;
+}
+
 bool FileSystem::mkdir(string dir) {
+    auto dirs = split(getFullPath(dir), "/");
+    if (dirs.size() == 0) {
+        // 输入为空
+        return false;
+    }
+    // 保存需创建的文件夹名
+    string dirToMake = dirs.back();
+    dirs.pop_back();
+    int location = findDir(dirs);
+    if (location == -1) {
+        // 父路径不存在
+        return false;
+    }
+    if (sfd[location].getNextDir(dirToMake) != -1) {
+        // 同名文件夹已存在
+        return false;
+    }
+    int freeDirID = sb.getFreeDir();
+    if (freeDirID == -1) {
+        // 无空闲目录
+        return false;
+    }
+    bool result = sfd[location].addItem(SFD_ITEM(2, dirToMake, freeDirID));
+    if (!result) {
+        // 当前目录下的item已满
+        return false;
+    }
     return true;
 }
 
@@ -53,9 +92,7 @@ bool FileSystem::touch(string filePath) {
 
     //读写控制 目前只添加了文件属主 其余用户只能读 属主可读写
     RWCT rwct;
-    extern View view;
     rwct.user_id = view.cur_user.getId();
-    extern UserManage user_mag;
     vector<int> user_id = user_mag.getUserId();
     for (int id:user_id) {
         if (id != view.cur_user.getId())
@@ -190,33 +227,7 @@ bool FileSystem::rm(string filePath, bool isRecursive) {
     return true;
 }
 
-vector<string> FileSystem::split(string str, string pattern) {
-    string::size_type pos;
-    vector<string> result;
-    str += pattern;
-    int size = str.size();
-
-    for (int i = 0; i < size; i++) {
-        pos = str.find(pattern, i);
-        if (pos < size) {
-            string s = str.substr(i, pos - i);
-            if (s.length() != 0) {
-                result.push_back(s);
-            }
-            i = pos + pattern.size() - 1;
-        }
-    }
-    return result;
-}
-
-int FileSystem::findDir(string path) {
-    if (path.length() == 0) return -1;
-    extern View view;
-    if (path[0] != '/') {   //相对路径
-        path = view.cur_path + '/' + path;
-    }
-    vector<string> dirs = split(path, "/");
-
+int FileSystem::findDir(vector<string> dirs) {
     int cur_dir_id = root_id;
     int next_dir_id;
     for (string dirname:dirs) {
@@ -229,9 +240,12 @@ int FileSystem::findDir(string path) {
     return cur_dir_id;
 }
 
+int FileSystem::findDir(string path) {
+    return findDir(split(getFullPath(path), "/"));
+}
+
 int FileSystem::findFile(string path) {
     if (path.length() == 0) return -1;
-    extern View view;
     if (path[0] != '/') {   //相对路径
         path = view.cur_path + '/' + path;
     }
