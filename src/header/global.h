@@ -8,9 +8,11 @@
 #include "system.h"
 #include "view.h"
 #include "superblock.h"
+#include "user.h"
 
 extern FileSystem fs;
 extern View view;
 extern SuperBlock sb;
+extern UserManage user_mag;
 
 #endif //OS_FILE_MANAGER_GLOBAL_H

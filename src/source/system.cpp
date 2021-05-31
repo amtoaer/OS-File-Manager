@@ -92,9 +92,7 @@ bool FileSystem::touch(string filePath) {
 
     //读写控制 目前只添加了文件属主 其余用户只能读 属主可读写
     RWCT rwct;
-    extern View view;
     rwct.user_id = view.cur_user.getId();
-    extern UserManage user_mag;
     vector<int> user_id = user_mag.getUserId();
     for (int id:user_id) {
         if (id != view.cur_user.getId())
@@ -266,7 +264,6 @@ int FileSystem::findDir(string path) {
 
 int FileSystem::findFile(string path) {
     if (path.length() == 0) return -1;
-    extern View view;
     if (path[0] != '/') {   //相对路径
         path = view.cur_path + '/' + path;
     }
