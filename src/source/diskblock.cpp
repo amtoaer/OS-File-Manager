@@ -6,10 +6,10 @@
 
 void DiskBlock::writeText(string text) {
     if (text.length() > BLOCKSIZE - 1) {
-        strncpy(file_cont.doc.content, text.data(), BLOCKSIZE - 1);
+        strncpy(file_cont.doc.content, text.c_str(), BLOCKSIZE - 1);
         file_cont.doc.n = BLOCKSIZE - 1;
     } else {
-        strcpy(file_cont.doc.content, text.data());
+        strcpy(file_cont.doc.content, text.c_str());
         file_cont.doc.n = text.length();
     }
 }
