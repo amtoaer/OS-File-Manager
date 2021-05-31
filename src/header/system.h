@@ -11,7 +11,6 @@
 #include "diskblock.h"
 #include "dir.h"
 #include <bits/stdc++.h>
-#include<windows.h>
 
 using namespace std;
 
@@ -25,6 +24,12 @@ private:
 
     //分割字符串
     vector<string> split(string str, string pattern);
+
+    //获取文件所占磁盘块id集合
+    vector<int> getFileDiskIds(int inode_id);
+
+    //计算给定长度文件需要占用的磁盘块
+    int calculateDiskNum(int len);
 
 public:
     // 默认初始化
@@ -42,7 +47,7 @@ public:
     // 创建文件
     bool touch(string filePath);
 
-    // 写入文件
+    // 写入文件（覆盖）
     bool writeFile(string filePath, string content);
 
     // 删除文件
