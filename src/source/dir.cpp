@@ -33,6 +33,14 @@ SFD_ITEM SFD::removeNext(string name) {
     return SFD_ITEM();
 }
 
+vector<SFD_ITEM> SFD::getAllNext() {
+    auto result = vector<SFD_ITEM>();
+    for (int i = 0; i < num; i++) {
+        result.push_back(dir[i]);
+    }
+    return result;
+}
+
 int SFD::getNextDir(string dirname) {
     int sfd_id = -1;
     SFD_ITEM item;

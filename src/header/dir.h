@@ -49,6 +49,8 @@ public:
     // 删除指定名称的文件/文件夹
     SFD_ITEM removeNext(string name);
 
+    // 获取全部文件/文件夹
+    vector<SFD_ITEM> getAllNext();
 
     //获取目录下文件i结点id 失败返回-1
     int getFileInode(string filename);
