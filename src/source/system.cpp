@@ -61,16 +61,27 @@ bool FileSystem::mkdir(string dir) {
     return true;
 }
 
-bool FileSystem::touch(string filePath, string filename) {
-    int cur_dir_id = findDir(filePath);
+bool FileSystem::touch(string filePath) {
+    string dirpath, filename;
+    //划分目录和文件
+    int split_id = filePath.length() - 1;
+    for (; split_id >= 0; split_id--) {
+        if (filePath[split_id] == '/')
+            break;
+    }
+    dirpath = filePath.substr(0, split_id);
+    filename = filePath.substr(split_id + 1, filePath.length());
+
+    int cur_dir_id = findDir(dirpath);
+    string content;
     if (cur_dir_id < 0) {
         cout << "目录不存在，文件创建失败!" << endl;
         return false;
     }
 
     //检查重名问题
-    if (sfd[cur_dir_id].getFileInode(filename) != -1) {
-        cout << "此位置包含同名文件，文件创建失败!" << endl;
+    if (sfd[cur_dir_id].hasNext(filename) != 0) {
+        cout << "此位置包含同名文件或目录，文件创建失败!" << endl;
         return false;
     }
 
@@ -120,45 +131,7 @@ bool FileSystem::touch(string filePath, string filename) {
     return true;
 }
 
-bool FileSystem::writeFile(string filePath, string content) {
-    int inode_id = findFile(filePath);
-    if (inode_id < 0) {
-        cout << "文件不存在，文件查找失败!" << endl;
-        return false;
-    }
-
-    //申请磁盘空间
-    int len = content.length();
-    int block_num = calculateDiskNum(len);
-    int applied_block_num = diNode[inode_id].getDiskblockNum();
-    if (block_num > superBlock.getFreeDiskNum() + applied_block_num) {    //超过磁盘最大数
-        cout << "磁盘空间不足!" << endl;
-        return false;
-    }
-    vector<int> applied_disk = getFileDiskIds(inode_id);
-    int pre_n = applied_disk.size();
-    //已申请空间不足
-    while (applied_disk.size() < block_num) {
-        int new_inode_id = superBlock.getFreeDiskBlock();
-        if (new_inode_id < 0) {
-            cout << "磁盘分配出错，文件写入失败!" << endl;
-            //出错 回收申请的磁盘块
-            while (applied_disk.size() > pre_n) {
-                int release_inode_id = applied_disk.back();
-                applied_disk.pop_back();
-                superBlock.recycleDiskBlock(release_inode_id);
-            }
-            return false;
-        }
-        applied_disk.push_back(new_inode_id);
-    }
-    //已申请空间剩余
-    while (applied_disk.size() > block_num) {
-        int release_inode_id = applied_disk.back();
-        applied_disk.pop_back();
-        superBlock.recycleDiskBlock(release_inode_id);
-    }
-
+void FileSystem::writeToDiskBlock(vector<int> applied_disk, int inode_id, int start_block, string content) {
     int direct_index = 0; //直接索引块编号
     int one_index = BLOCKIDNUM - 1; //一次间址索引块编号
     int two_index = 2 * BLOCKIDNUM;//二次间址索引块编号
@@ -168,11 +141,30 @@ bool FileSystem::writeFile(string filePath, string content) {
     int two_disk_id;    //二级间址磁盘块编号
     int two_disk_nth;   //二级间址索引磁盘块编号
 
+    int block_num = applied_disk.size();
+    if (start_block > direct_index) {
+        direct_disk_id = applied_disk[direct_index];
+    }
+    if (start_block > one_index) {
+        one_disk_id = applied_disk[one_index];
+    }
+    if (start_block > two_index) {
+        two_disk_id = applied_disk[two_index];
+    }
+    if (start_block > two_index + 1) {
+        for (int i = start_block; i >= two_index + 1; i--) {
+            if (i % (two_index + 1) == 0) {
+                two_disk_nth = i;
+                break;
+            }
+        }
+    }
     int write_start = 0;
+
     //写入内容到磁盘块
-    for (int i = 0; i < block_num; i++) {
+    for (int i = start_block; i < block_num; i++) {
         if (i == direct_index) {
-            diNode[inode_id].setSize(len);
+            diNode[inode_id].setSize(content.length());
             diNode[inode_id].setDiskBlockNum(block_num);
             diNode[inode_id].setDiskBlockId(applied_disk[i]);
             direct_disk_id = applied_disk[i];
@@ -213,6 +205,91 @@ bool FileSystem::writeFile(string filePath, string content) {
             diskBlock[two_disk_nth].addIndex(disk_id);
         }
     }
+
+}
+
+bool FileSystem::writeFile(string filePath, string content) {
+    int inode_id = findFile(filePath);
+    if (inode_id < 0) {
+        cout << "文件不存在，文件查找失败!" << endl;
+        return false;
+    }
+
+    //申请磁盘空间
+    int len = content.length();
+    int block_num = calculateDiskNum(len);
+    int applied_block_num = diNode[inode_id].getDiskblockNum();
+    if (block_num > superBlock.getFreeDiskNum() + applied_block_num) {    //超过磁盘最大数
+        cout << "磁盘空间不足!" << endl;
+        return false;
+    }
+    vector<int> applied_disk = getFileDiskIds(inode_id);
+    int pre_n = applied_disk.size();
+    //已申请空间不足
+    while (applied_disk.size() < block_num) {
+        int new_inode_id = superBlock.getFreeDiskBlock();
+        if (new_inode_id < 0) {
+            cout << "磁盘分配出错，文件写入失败!" << endl;
+            //出错 回收申请的磁盘块
+            while (applied_disk.size() > pre_n) {
+                int release_inode_id = applied_disk.back();
+                applied_disk.pop_back();
+                superBlock.recycleDiskBlock(release_inode_id);
+            }
+            return false;
+        }
+        applied_disk.push_back(new_inode_id);
+    }
+    //已申请空间剩余
+    while (applied_disk.size() > block_num) {
+        int release_inode_id = applied_disk.back();
+        applied_disk.pop_back();
+        superBlock.recycleDiskBlock(release_inode_id);
+    }
+
+    //将内容写到磁盘块
+    writeToDiskBlock(applied_disk, inode_id, 0, content);
+    return true;
+}
+
+bool FileSystem::appendToFile(string filePath, string content) {
+    int inode_id = findFile(filePath);
+    if (inode_id < 0) {
+        cout << "文件不存在，文件查找失败!" << endl;
+        return false;
+    }
+
+    //申请磁盘空间
+    int file_len = diNode[inode_id].getSize() + content.length();
+    int block_num = calculateDiskNum(file_len);
+    int extra_block_num = block_num - diNode[inode_id].getDiskblockNum();
+    if (extra_block_num > superBlock.getFreeDiskNum()) {
+        cout << "磁盘空间不足，追加失败!" << endl;
+        return false;
+    }
+    vector<int> applied_disk = getFileDiskIds(inode_id);
+    int start_block = applied_disk.size() - 1;
+    while (applied_disk.size() < block_num) {
+        int new_inode_id = superBlock.getFreeDiskBlock();
+        if (new_inode_id < 0) {
+            cout << "磁盘分配出错，文件写入失败!" << endl;
+            //出错 回收申请的磁盘块
+            while (applied_disk.size() > 0) {
+                int release_inode_id = applied_disk.back();
+                applied_disk.pop_back();
+                superBlock.recycleDiskBlock(release_inode_id);
+            }
+            return false;
+        }
+        applied_disk.push_back(new_inode_id);
+    }
+
+    if (start_block > 0) {  //原文件最后一块有内容
+        char temp[BLOCKSIZE + 1];
+        diskBlock[applied_disk[start_block]].getText(temp);
+        content = string(temp) + content;
+    }
+    writeToDiskBlock(applied_disk, inode_id, start_block, content);
     return true;
 }
 
