@@ -39,9 +39,6 @@ void SuperBlock::format() {
 
     //初始化空闲磁盘块信息
     freedisk_num = 0;
-
-    //成组链接初始化 空闲块id为0-DISKNUM-1###########
-
     // 初始化空闲磁盘块栈
     clearFreeDiskStack();
     // 遍历回收
