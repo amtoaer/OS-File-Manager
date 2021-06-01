@@ -234,6 +234,35 @@ bool FileSystem::writeFile(string filePath, string content) {
 }
 
 bool FileSystem::cp(string from, string to) {
+    auto fromDirs = split(getFullPath(from), "/");
+    auto toDirs = split(getFullPath(to), "/");
+    if (fromDirs.size() == 0 || toDirs.size() == 0) {//复制的文件或者目的目录未空
+        return false;
+    }
+
+    // 需复制的 文件夹名 或者 文件名
+    string fileOrDir = fromDirs.back();
+    fromDirs.pop_back();
+    int fromLocation = findDir(fromDirs);
+    if (fromLocation == -1) {
+        //父路径不存在
+        return false;
+    }
+
+
+    int toLocation = findDir(toDirs);
+    if (toLocation == -1) {
+        //目的路径不存在
+        return false;
+    }
+
+
+    if (sfd[toLocation].getNextDir(fileOrDir) != -1) {
+        //存在重名的文件夹
+        return false;
+    }
+
+
     return true;
 }
 
