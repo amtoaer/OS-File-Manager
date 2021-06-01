@@ -73,7 +73,6 @@ bool FileSystem::touch(string filePath) {
     filename = filePath.substr(split_id + 1, filePath.length());
 
     int cur_dir_id = findDir(dirpath);
-    string content;
     if (cur_dir_id < 0) {
         cout << "目录不存在，文件创建失败!" << endl;
         return false;
@@ -104,7 +103,9 @@ bool FileSystem::touch(string filePath) {
         return false;
     }
 
-    //设置初始块
+    //初始化i结点
+    diNode[inode_id].setSize(0);
+    diNode[inode_id].setDiskBlockNum(1);
     diNode[inode_id].setDiskBlockId(diskblock_id);
 
     //读写控制 目前只添加了文件属主 其余用户只能读 属主可读写
@@ -154,7 +155,7 @@ void FileSystem::writeToDiskBlock(vector<int> applied_disk, int inode_id, int st
     if (start_block > two_index + 1) {
         for (int i = start_block; i >= two_index + 1; i--) {
             if (i % (two_index + 1) == 0) {
-                two_disk_nth = i;
+                two_disk_nth = applied_disk[i];
                 break;
             }
         }
@@ -274,7 +275,7 @@ bool FileSystem::appendToFile(string filePath, string content) {
         if (new_inode_id < 0) {
             cout << "磁盘分配出错，文件写入失败!" << endl;
             //出错 回收申请的磁盘块
-            while (applied_disk.size() > 0) {
+            while (applied_disk.size() > start_block + 1) {
                 int release_inode_id = applied_disk.back();
                 applied_disk.pop_back();
                 superBlock.recycleDiskBlock(release_inode_id);
@@ -285,6 +286,13 @@ bool FileSystem::appendToFile(string filePath, string content) {
     }
 
     if (start_block > 0) {  //原文件最后一块有内容
+        //更新inode信息
+        diNode[inode_id].setSize(file_len);
+        diNode[inode_id].setDiskBlockNum(block_num);
+        time_t timep;
+        time(&timep);
+        diNode[inode_id].setModifiedTime(timep);
+
         char temp[BLOCKSIZE + 1];
         diskBlock[applied_disk[start_block]].getText(temp);
         content = string(temp) + content;
@@ -427,10 +435,7 @@ int FileSystem::findFile(string path) {
         }
         cur_dir_id = next_dir_id;
     }
-    int inode_id = sfd[cur_dir_id].getFileInode(strs[strs.size() - 1]);
-    if (inode_id < 0) {
-        return -1;
-    }
+    int inode_id = sfd[cur_dir_id].getFileInode(strs.back());
     return inode_id;
 }
 
