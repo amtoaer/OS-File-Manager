@@ -94,6 +94,11 @@ int SuperBlock::getFreeInode() {
     return -1;
 }
 
+void SuperBlock::recycleInode(int inode) {
+    freeinode_num++;
+    freeInode.push_back(inode);
+}
+
 int SuperBlock::getFreeDir() {
     if (freedir_num <= 0) return -1;
     int i = 0;
@@ -105,4 +110,9 @@ int SuperBlock::getFreeDir() {
         }
     }
     return i;
+}
+
+void SuperBlock::recycleDir(int dir) {
+    freedir_num++;
+    sfdBitmap[dir] = false;
 }
