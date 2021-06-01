@@ -235,7 +235,38 @@ bool FileSystem::cp(string from, string to) {
 }
 
 bool FileSystem::mv(string from, string to) {
-    return true;
+    // 此处规定: from精确到文件/文件夹，to精确到上级目录
+    // 如/a目录下的b文件移动到/c
+    // from = /a/b
+    // to = /c
+    auto fromDirs = split(getFullPath(from), "/");
+    auto toDirs = split(getFullPath(to), "/");
+    if (fromDirs.size() == 0) {
+        // 目录非法
+        return false;
+    }
+    auto name = fromDirs.back();
+    fromDirs.pop_back();
+    auto location = findDir(fromDirs);
+    auto targetLocation = findDir(toDirs);
+    if (targetLocation == -1) {
+        // 目标文件夹不存在
+        return false;
+    }
+    if (sfd[targetLocation].hasNext(name)) {
+        // 目标文件夹已存在同名文件或文件夹
+        return false;
+    }
+    if (location == -1) {
+        // from上级目录不存在
+        return false;
+    }
+    if (!sfd[location].hasNext(name)) {
+        // from文件或文件夹不存在
+        return false;
+    }
+    auto item = sfd[location].removeNext(name);
+    return sfd[targetLocation].addItem(item);
 }
 
 bool FileSystem::rm(string filePath, bool isRecursive) {
