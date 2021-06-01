@@ -271,9 +271,47 @@ bool FileSystem::mv(string from, string to) {
     return sfd[targetLocation].addItem(item);
 }
 
-bool FileSystem::rm(string filePath, bool isRecursive) {
-
-    return true;
+bool FileSystem::rm(string filePath) {
+    auto dirs = split(getFullPath(filePath), "/");
+    if (dirs.size() == 0) {
+        // 路径不合法
+        return false;
+    }
+    auto name = dirs.back();
+    dirs.pop_back();
+    int location = findDir(dirs);
+    if (location == -1) {
+        // 不存在上级目录
+        return false;
+    }
+    auto has = sfd[location].hasNext(name);
+    if (!has) {
+        // 不存在该文件或目录
+        return false;
+    } else if (has == 1) {
+        // 是文件，找到inode
+        auto inode = sfd[location].getFileInode(name);
+        // 通过inode找到磁盘块id并遍历回收
+        auto ids = getFileDiskIds(inode);
+        for (int i:ids) {
+            sb.recycleDiskBlock(i);
+        }
+        // 回收inode
+        sb.recycleInode(inode);
+        // 移除父文件夹的该条记录
+        sfd[location].removeNext(name);
+    } else {
+        // 是目录，找到dir
+        auto dir = sfd[location].getNextDir(name);
+        // 遍历回收该文件夹下的文件/文件夹
+        for (auto i:sfd[dir].getAllNext()) {
+            rm(filePath + "/" + i.name);
+        }
+        // 回收dir
+        sb.recycleDir(dir);
+        // 移除父文件夹的该条记录
+        sfd[location].removeNext(name);
+    }
 }
 
 int FileSystem::findDir(vector<string> dirs) {

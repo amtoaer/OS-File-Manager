@@ -56,7 +56,7 @@ public:
     string readFile(string filePath);
 
     // 删除文件
-    bool rm(string filePath, bool isRecursive);
+    bool rm(string filePath);
 
     // 复制文件
     bool cp(string from, string to);
