@@ -3,6 +3,7 @@
 //
 
 #include "../header/superblock.h"
+#include "../header/system.h"
 
 void SuperBlock::clearFreeDiskStack(int next = -1) {
     freeDiskStack[0] = 1;
@@ -17,11 +18,13 @@ void SuperBlock::copy(DiskBlock db) {
 }
 
 void SuperBlock::pushFreeDiskStack(int loc) {
+    freedisk_num++;
     freeDiskStack[0]++;
     freeDiskStack[freeDiskStack[0]] = loc;
 }
 
 int SuperBlock::popFreeDiskStack() {
+    freedisk_num--;
     int result = freeDiskStack[freeDiskStack[0]];
     freeDiskStack[0]--;
     return result;
@@ -35,7 +38,7 @@ void SuperBlock::format() {
     }
 
     //初始化空闲磁盘块信息
-    freedisk_num = DISKNUM;
+    freedisk_num = 0;
 
     //成组链接初始化 空闲块id为0-DISKNUM-1###########
 
@@ -59,9 +62,11 @@ void SuperBlock::recycleDiskBlock(int loc) {
         fs.getDiskBlock(loc).copy(freeDiskStack);
         // 清空当前空闲磁盘块栈
         clearFreeDiskStack(loc);
+        freedisk_num++;
+    } else {
+        // 添加到磁盘块栈
+        pushFreeDiskStack(loc);
     }
-    // 添加到磁盘块栈
-    pushFreeDiskStack(loc);
 }
 
 int SuperBlock::getFreeDiskBlock() {
@@ -70,10 +75,14 @@ int SuperBlock::getFreeDiskBlock() {
             // 空闲磁盘块为空
             return -1;
         }
+        int free = freeDiskStack[1];
         // 调入磁盘栈
         this->copy(fs.getDiskBlock(freeDiskStack[1]));
+        freedisk_num--;
+        return free;
+    } else {
+        return popFreeDiskStack();
     }
-    return popFreeDiskStack();
 }
 
 int SuperBlock::getFreeInode() {

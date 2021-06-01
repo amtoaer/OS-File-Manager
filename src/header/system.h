@@ -6,7 +6,6 @@
 #define OS_FILE_MANAGER_SYSTEM_H
 
 #include "config.h"
-#include "global.h"
 #include "superblock.h"
 #include "inode.h"
 #include "diskblock.h"
@@ -28,6 +27,9 @@ private:
     //获取文件所占磁盘块id集合
     vector<int> getFileDiskIds(int inode_id);
 
+    //获取文件内容所占磁盘块id集合
+    vector<int> getFileContentDiskIds(int inode_id);
+
     //计算给定长度文件需要占用的磁盘块
     int calculateDiskNum(int len);
 
@@ -45,10 +47,13 @@ public:
     bool mkdir(string dir);
 
     // 创建文件
-    bool touch(string filePath);
+    bool touch(string filePath, string filename);
 
     // 写入文件（覆盖）
     bool writeFile(string filePath, string content);
+
+    //读文件
+    string readFile(string filePath);
 
     // 删除文件
     bool rm(string filePath, bool isRecursive);
@@ -72,5 +77,7 @@ public:
     DiskBlock getDiskBlock(int index);
 
 };
+
+extern FileSystem fs;
 
 #endif //OS_FILE_MANAGER_SYSTEM_H

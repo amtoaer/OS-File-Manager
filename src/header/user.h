@@ -64,4 +64,6 @@ public:
     vector<int> getUserId();    //获取全部用户的id号
 };
 
+extern UserManage user_mag;
+
 #endif //OS_FILE_MANAGER_USER_H

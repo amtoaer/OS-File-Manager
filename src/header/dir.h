@@ -43,6 +43,15 @@ public:
     //获取下一级目录id 失败返回-1
     int getNextDir(string dirname);
 
+    // 返回指定名称的文件/文件夹（不存在返回0,存在文件返回1,存在目录返回2）
+    int hasNext(string name);
+
+    // 删除指定名称的文件/文件夹
+    SFD_ITEM removeNext(string name);
+
+    // 获取全部文件/文件夹
+    vector<SFD_ITEM> getAllNext();
+
     //获取目录下文件i结点id 失败返回-1
     int getFileInode(string filename);
 
