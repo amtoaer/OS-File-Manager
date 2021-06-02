@@ -50,6 +50,38 @@ public:
         this->rwct = rwct;
     }
 
+    bool canChangePower(int userId) {    //用户可否更改权限
+        //userId为操作用户
+        if (rwct.user_id == userId) {
+            return true;
+        }
+        return false;
+    }
+
+    void changePower(int userId, string jur) {  //将目标用户权限更改为jur
+        //userId为被操作用户
+        rwct.r_group.remove(userId);
+        rwct.w_group.remove(userId);
+        rwct.raw_group.remove(userId);
+        rwct.null_group.remove(userId);
+        if (jur == "or") {
+            rwct.r_group.push_back(userId);
+            return;
+        }
+        if (jur == "ow") {
+            rwct.w_group.push_back(userId);
+            return;
+        }
+        if (jur == "raw") {
+            rwct.raw_group.push_back(userId);
+            return;
+        }
+        if (jur == "no") {
+            rwct.null_group.push_back(userId);
+            return;
+        }
+    }
+
     void setSize(int size) {
         i_size = size;
     }

@@ -52,6 +52,9 @@ public:
     //格式化
     void format();
 
+    //修改文件权限（只能变更为：只读（or），只写（ow），读写（raw），无权限（no））
+    bool changeFileRWCT(string filePath, string userName, string jurisdiction);
+
     // 创建文件夹
     bool mkdir(string dir);
 

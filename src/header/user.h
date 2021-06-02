@@ -62,6 +62,7 @@ public:
     bool deleteUser(string username, string userpwd);  //注销用户
     User login(string username, string userpwd);       //登陆用户
     vector<int> getUserId();    //获取全部用户的id号
+    int getId(string name);     //通过用户名得到id
 };
 
 extern UserManage user_mag;

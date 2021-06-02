@@ -19,6 +19,44 @@ void FileSystem::format() {
     root_id = 0;
 }
 
+bool FileSystem::changeFileRWCT(string filePath, string userName, string jurisdiction) {
+    //路径filePath精确到文件名，jurisdiction为修改后的权限名称
+    //userName为被修改权限的用户名
+    //修改后的权限名称只允许为：or、ow、raw、no
+    if (jurisdiction != "or" && jurisdiction != "ow" && jurisdiction != "raw" && jurisdiction != "no") {
+        //输入权限有误
+        return false;
+    }
+    int goalUserId = user_mag.getId(userName);
+    vector<int> allUserId = user_mag.getUserId();
+    bool found = false; //是否找到了目标用户
+    for (int userId: allUserId) {
+        if (userId == goalUserId) {
+            found = true;
+            break;
+        }
+    }
+    if (!found) {
+        //没有可操作的目标用户
+        return false;
+    }
+    auto fromDirs = split(getFullPath(filePath), "/");
+    string fileName = fromDirs.back();
+    fromDirs.pop_back();
+
+    int fromLocation = findDir(fromDirs);
+    int fileId = sfd[fromLocation].getFileInode(fileName);
+    if (fileId == -1) {
+        //不存在该文件
+        return false;
+    }
+    if (!diNode[fileId].canChangePower(view.cur_user.getId())) {
+        //该文件不可被当前用户修改权限
+        return false;
+    }
+    diNode[fileId].changePower(goalUserId, jurisdiction);
+    return true;
+}
 
 string FileSystem::getFullPath(string path) {
     if (path.length() == 0) {
@@ -320,7 +358,7 @@ string FileSystem::readFile(string filePath) {
 bool FileSystem::cp(string from, string to) {
     auto fromDirs = split(getFullPath(from), "/");
     auto toDirs = split(getFullPath(to), "/");
-    if (fromDirs.size() == 0 || toDirs.size() == 0) {//复制的文件或者目的目录未空
+    if (fromDirs.size() == 0/* || toDirs.size() == 0*/) {//复制的文件或者目的目录未空
         return false;
     }
 

@@ -6,8 +6,10 @@
 
 vector<int> UserManage::getUserId() {
     vector<int> user_id;
-    for (int i = 0; i < user_num; i++) {
-        user_id.push_back(i);
+    for (int i = 0; i < USERNUM; i++) {
+        if (users[i].getId() != -1) {
+            user_id.push_back(i);
+        }
     }
     return user_id;
 }
@@ -51,4 +53,13 @@ User UserManage::login(string username, string userpwd) {//用户登陆
         }
     }
     return false;//未在用户信息中查到此人
+}
+
+int UserManage::getId(string name) { //通过用户名得到用户id
+    for (User user: users) {
+        if (user.isUsername(name)) {
+            return user.getId();
+        }
+    }
+    return -1;
 }
