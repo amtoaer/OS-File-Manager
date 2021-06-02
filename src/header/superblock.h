@@ -47,8 +47,14 @@ public:
     //获取空闲i结点
     int getFreeInode();
 
+    // 回收空闲i节点
+    void recycleInode(int);
+
     //获取空闲目录
     int getFreeDir();
+
+    // 回收空闲目录
+    void recycleDir(int);
 
     //获取空闲i结点数
     int getFreeInodeNum() {

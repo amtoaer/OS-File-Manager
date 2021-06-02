@@ -61,16 +61,26 @@ bool FileSystem::mkdir(string dir) {
     return true;
 }
 
-bool FileSystem::touch(string filePath, string filename) {
-    int cur_dir_id = findDir(filePath);
+bool FileSystem::touch(string filePath) {
+    string dirpath, filename;
+    //划分目录和文件
+    int split_id = filePath.length() - 1;
+    for (; split_id >= 0; split_id--) {
+        if (filePath[split_id] == '/')
+            break;
+    }
+    dirpath = filePath.substr(0, split_id);
+    filename = filePath.substr(split_id + 1, filePath.length());
+
+    int cur_dir_id = findDir(dirpath);
     if (cur_dir_id < 0) {
         cout << "目录不存在，文件创建失败!" << endl;
         return false;
     }
 
     //检查重名问题
-    if (sfd[cur_dir_id].getFileInode(filename) != -1) {
-        cout << "此位置包含同名文件，文件创建失败!" << endl;
+    if (sfd[cur_dir_id].hasNext(filename) != 0) {
+        cout << "此位置包含同名文件或目录，文件创建失败!" << endl;
         return false;
     }
 
@@ -93,7 +103,9 @@ bool FileSystem::touch(string filePath, string filename) {
         return false;
     }
 
-    //设置初始块
+    //初始化i结点
+    diNode[inode_id].setSize(0);
+    diNode[inode_id].setDiskBlockNum(1);
     diNode[inode_id].setDiskBlockId(diskblock_id);
 
     //读写控制 目前只添加了文件属主 其余用户只能读 属主可读写
@@ -118,6 +130,83 @@ bool FileSystem::touch(string filePath, string filename) {
     sfd[cur_dir_id].addItem(new_file);
 
     return true;
+}
+
+void FileSystem::writeToDiskBlock(vector<int> applied_disk, int inode_id, int start_block, string content) {
+    int direct_index = 0; //直接索引块编号
+    int one_index = BLOCKIDNUM - 1; //一次间址索引块编号
+    int two_index = 2 * BLOCKIDNUM;//二次间址索引块编号
+
+    int direct_disk_id; //直接索引磁盘块编号
+    int one_disk_id;    //一级间址磁盘块编号
+    int two_disk_id;    //二级间址磁盘块编号
+    int two_disk_nth;   //二级间址索引磁盘块编号
+
+    int block_num = applied_disk.size();
+    if (start_block > direct_index) {
+        direct_disk_id = applied_disk[direct_index];
+    }
+    if (start_block > one_index) {
+        one_disk_id = applied_disk[one_index];
+    }
+    if (start_block > two_index) {
+        two_disk_id = applied_disk[two_index];
+    }
+    if (start_block > two_index + 1) {
+        for (int i = start_block; i >= two_index + 1; i--) {
+            if (i % (two_index + 1) == 0) {
+                two_disk_nth = applied_disk[i];
+                break;
+            }
+        }
+    }
+    int write_start = 0;
+
+    //写入内容到磁盘块
+    for (int i = start_block; i < block_num; i++) {
+        if (i == direct_index) {
+            diNode[inode_id].setSize(content.length());
+            diNode[inode_id].setDiskBlockNum(block_num);
+            diNode[inode_id].setDiskBlockId(applied_disk[i]);
+            direct_disk_id = applied_disk[i];
+            diskBlock[direct_disk_id].clearIndex();
+            //设置修改时间
+            time_t timep;
+            time(&timep);
+            diNode[inode_id].setModifiedTime(timep);
+        } else if (i < one_index) { //直接索引
+            string substr = content.substr(write_start, BLOCKSIZE - 1);
+            int disk_id = applied_disk[i];
+            diskBlock[disk_id].writeText(substr);
+            write_start += BLOCKSIZE - 1;
+            diskBlock[direct_disk_id].addIndex(disk_id);
+        } else if (i == one_index) {
+            one_disk_id = applied_disk[i];
+            diskBlock[direct_disk_id].addIndex(one_disk_id);
+            diskBlock[one_disk_id].clearIndex();
+        } else if (i < two_index) { //一次间址
+            string substr = content.substr(write_start, BLOCKSIZE - 1);
+            int disk_id = applied_disk[i];
+            diskBlock[disk_id].writeText(substr);
+            write_start += BLOCKSIZE - 1;
+            diskBlock[one_disk_id].addIndex(disk_id);
+        } else if (i == two_index) {
+            two_disk_id = applied_disk[i];
+            diskBlock[direct_disk_id].addIndex(two_disk_id);
+            diskBlock[two_disk_id].clearIndex();
+        } else if ((i - two_index - 1) % (BLOCKIDNUM + 1) == 0) { //二次间址的索引
+            two_disk_nth = applied_disk[i];
+            diskBlock[two_disk_id].addIndex(two_disk_nth);
+            diskBlock[two_disk_nth].clearIndex();
+        } else {
+            string substr = content.substr(write_start, BLOCKSIZE - 1);
+            int disk_id = applied_disk[i];
+            diskBlock[disk_id].writeText(substr);
+            write_start += BLOCKSIZE - 1;
+            diskBlock[two_disk_nth].addIndex(disk_id);
+        }
+    }
+
 }
 
 bool FileSystem::writeFile(string filePath, string content) {
@@ -159,60 +248,56 @@ bool FileSystem::writeFile(string filePath, string content) {
         superBlock.recycleDiskBlock(release_inode_id);
     }
 
-    int direct_index = 0; //直接索引块编号
-    int one_index = BLOCKIDNUM - 1; //一次间址索引块编号
-    int two_index = 2 * BLOCKIDNUM;//二次间址索引块编号
+    //将内容写到磁盘块
+    writeToDiskBlock(applied_disk, inode_id, 0, content);
+    return true;
+}
 
-    int direct_disk_id; //直接索引磁盘块编号
-    int one_disk_id;    //一级间址磁盘块编号
-    int two_disk_id;    //二级间址磁盘块编号
-    int two_disk_nth;   //二级间址索引磁盘块编号
-
-    int write_start = 0;
-    //写入内容到磁盘块
-    for (int i = 0; i < block_num; i++) {
-        if (i == direct_index) {
-            diNode[inode_id].setSize(len);
-            diNode[inode_id].setDiskBlockNum(block_num);
-            diNode[inode_id].setDiskBlockId(applied_disk[i]);
-            direct_disk_id = applied_disk[i];
-            diskBlock[direct_disk_id].clearIndex();
-            //设置修改时间
-            time_t timep;
-            time(&timep);
-            diNode[inode_id].setModifiedTime(timep);
-        } else if (i < one_index) { //直接索引
-            string substr = content.substr(write_start, BLOCKSIZE - 1);
-            int disk_id = applied_disk[i];
-            diskBlock[disk_id].writeText(substr);
-            write_start += BLOCKSIZE - 1;
-            diskBlock[direct_disk_id].addIndex(disk_id);
-        } else if (i == one_index) {
-            one_disk_id = applied_disk[i];
-            diskBlock[direct_disk_id].addIndex(one_disk_id);
-            diskBlock[one_disk_id].clearIndex();
-        } else if (i < two_index) { //一次间址
-            string substr = content.substr(write_start, BLOCKSIZE - 1);
-            int disk_id = applied_disk[i];
-            diskBlock[disk_id].writeText(substr);
-            write_start += BLOCKSIZE - 1;
-            diskBlock[one_disk_id].addIndex(disk_id);
-        } else if (i == two_index) {
-            two_disk_id = applied_disk[i];
-            diskBlock[direct_disk_id].addIndex(two_disk_id);
-            diskBlock[two_disk_id].clearIndex();
-        } else if ((i - two_index - 1) % (BLOCKIDNUM + 1) == 0) { //二次间址的索引
-            two_disk_nth = applied_disk[i];
-            diskBlock[two_disk_id].addIndex(two_disk_nth);
-            diskBlock[two_disk_nth].clearIndex();
-        } else {
-            string substr = content.substr(write_start, BLOCKSIZE - 1);
-            int disk_id = applied_disk[i];
-            diskBlock[disk_id].writeText(substr);
-            write_start += BLOCKSIZE - 1;
-            diskBlock[two_disk_nth].addIndex(disk_id);
-        }
+bool FileSystem::appendToFile(string filePath, string content) {
+    int inode_id = findFile(filePath);
+    if (inode_id < 0) {
+        cout << "文件不存在，文件查找失败!" << endl;
+        return false;
     }
+
+    //申请磁盘空间
+    int file_len = diNode[inode_id].getSize() + content.length();
+    int block_num = calculateDiskNum(file_len);
+    int extra_block_num = block_num - diNode[inode_id].getDiskblockNum();
+    if (extra_block_num > superBlock.getFreeDiskNum()) {
+        cout << "磁盘空间不足，追加失败!" << endl;
+        return false;
+    }
+    vector<int> applied_disk = getFileDiskIds(inode_id);
+    int start_block = applied_disk.size() - 1;
+    while (applied_disk.size() < block_num) {
+        int new_inode_id = superBlock.getFreeDiskBlock();
+        if (new_inode_id < 0) {
+            cout << "磁盘分配出错，文件写入失败!" << endl;
+            //出错 回收申请的磁盘块
+            while (applied_disk.size() > start_block + 1) {
+                int release_inode_id = applied_disk.back();
+                applied_disk.pop_back();
+                superBlock.recycleDiskBlock(release_inode_id);
+            }
+            return false;
+        }
+        applied_disk.push_back(new_inode_id);
+    }
+
+    if (start_block > 0) {  //原文件最后一块有内容
+        //更新inode信息
+        diNode[inode_id].setSize(file_len);
+        diNode[inode_id].setDiskBlockNum(block_num);
+        time_t timep;
+        time(&timep);
+        diNode[inode_id].setModifiedTime(timep);
+
+        char temp[BLOCKSIZE + 1];
+        diskBlock[applied_disk[start_block]].getText(temp);
+        content = string(temp) + content;
+    }
+    writeToDiskBlock(applied_disk, inode_id, start_block, content);
     return true;
 }
 
@@ -378,9 +463,47 @@ bool FileSystem::mv(string from, string to) {
     return sfd[targetLocation].addItem(item);
 }
 
-bool FileSystem::rm(string filePath, bool isRecursive) {
-
-    return true;
+bool FileSystem::rm(string filePath) {
+    auto dirs = split(getFullPath(filePath), "/");
+    if (dirs.size() == 0) {
+        // 路径不合法
+        return false;
+    }
+    auto name = dirs.back();
+    dirs.pop_back();
+    int location = findDir(dirs);
+    if (location == -1) {
+        // 不存在上级目录
+        return false;
+    }
+    auto has = sfd[location].hasNext(name);
+    if (!has) {
+        // 不存在该文件或目录
+        return false;
+    } else if (has == 1) {
+        // 是文件，找到inode
+        auto inode = sfd[location].getFileInode(name);
+        // 通过inode找到磁盘块id并遍历回收
+        auto ids = getFileDiskIds(inode);
+        for (int i:ids) {
+            sb.recycleDiskBlock(i);
+        }
+        // 回收inode
+        sb.recycleInode(inode);
+        // 移除父文件夹的该条记录
+        sfd[location].removeNext(name);
+    } else {
+        // 是目录，找到dir
+        auto dir = sfd[location].getNextDir(name);
+        // 遍历回收该文件夹下的文件/文件夹
+        for (auto i:sfd[dir].getAllNext()) {
+            rm(filePath + "/" + i.name);
+        }
+        // 回收dir
+        sb.recycleDir(dir);
+        // 移除父文件夹的该条记录
+        sfd[location].removeNext(name);
+    }
 }
 
 int FileSystem::findDir(vector<string> dirs) {
@@ -419,10 +542,7 @@ int FileSystem::findFile(string path) {
         }
         cur_dir_id = next_dir_id;
     }
-    int inode_id = sfd[cur_dir_id].getFileInode(strs[strs.size() - 1]);
-    if (inode_id < 0) {
-        return -1;
-    }
+    int inode_id = sfd[cur_dir_id].getFileInode(strs.back());
     return inode_id;
 }
 

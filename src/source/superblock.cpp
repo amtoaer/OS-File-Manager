@@ -39,9 +39,6 @@ void SuperBlock::format() {
 
     //初始化空闲磁盘块信息
     freedisk_num = 0;
-
-    //成组链接初始化 空闲块id为0-DISKNUM-1###########
-
     // 初始化空闲磁盘块栈
     clearFreeDiskStack();
     // 遍历回收
@@ -94,6 +91,11 @@ int SuperBlock::getFreeInode() {
     return -1;
 }
 
+void SuperBlock::recycleInode(int inode) {
+    freeinode_num++;
+    freeInode.push_back(inode);
+}
+
 int SuperBlock::getFreeDir() {
     if (freedir_num <= 0) return -1;
     int i = 0;
@@ -105,4 +107,9 @@ int SuperBlock::getFreeDir() {
         }
     }
     return i;
+}
+
+void SuperBlock::recycleDir(int dir) {
+    freedir_num++;
+    sfdBitmap[dir] = false;
 }

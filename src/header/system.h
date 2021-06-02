@@ -39,6 +39,9 @@ private:
     // 复制当前文件夹及其内容
     void cpCurrentDir(string from, string to);
 
+    //将文件内容写到磁盘块
+    void writeToDiskBlock(vector<int> applied_disk, int inode_i, int start_block, string content);
+
 public:
     // 默认初始化
     FileSystem();
@@ -53,16 +56,19 @@ public:
     bool mkdir(string dir);
 
     // 创建文件
-    bool touch(string filePath, string filename);
+    bool touch(string filePath);
 
     // 写入文件（覆盖）
     bool writeFile(string filePath, string content);
+
+    //追加到文件
+    bool appendToFile(string filePath, string content);
 
     //读文件
     string readFile(string filePath);
 
     // 删除文件
-    bool rm(string filePath, bool isRecursive);
+    bool rm(string filePath);
 
     // 复制文件
     bool cp(string from, string to);
@@ -82,7 +88,6 @@ public:
     // 返回对应位置的磁盘块
     DiskBlock getDiskBlock(int index);
 
-    void cpCurrentDir(string from, string to);
 };
 
 extern FileSystem fs;
