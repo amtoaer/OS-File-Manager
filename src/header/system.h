@@ -33,6 +33,12 @@ private:
     //计算给定长度文件需要占用的磁盘块
     int calculateDiskNum(int len);
 
+    // 计算文件数 及 文件夹数
+    void calculateDirAndFile(int id, int &dirNum, int &fileNum);
+
+    // 复制当前文件夹及其内容
+    void cpCurrentDir(string from, string to);
+
 public:
     // 默认初始化
     FileSystem();
@@ -76,6 +82,7 @@ public:
     // 返回对应位置的磁盘块
     DiskBlock getDiskBlock(int index);
 
+    void cpCurrentDir(string from, string to);
 };
 
 extern FileSystem fs;

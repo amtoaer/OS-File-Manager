@@ -242,12 +242,12 @@ bool FileSystem::cp(string from, string to) {
     // 需复制的 文件夹名 或者 文件名
     string fileOrDir = fromDirs.back();
     fromDirs.pop_back();
+
     int fromLocation = findDir(fromDirs);
     if (fromLocation == -1) {
         //父路径不存在
         return false;
     }
-
 
     int toLocation = findDir(toDirs);
     if (toLocation == -1) {
@@ -255,14 +255,92 @@ bool FileSystem::cp(string from, string to) {
         return false;
     }
 
-
-    if (sfd[toLocation].getNextDir(fileOrDir) != -1) {
-        //存在重名的文件夹
+    if (!sfd[toLocation].canAddItem()) {
+        //目的目录已满
         return false;
     }
 
+    int fileNum = 0, dirNum = 0;
+
+    if (sfd[fromLocation].getNextDir(fileOrDir) == -1) {//该名称不是一个文件夹
+        fileNum = 1;
+        int fileId = findFile(getFullPath(from));
+        if (fileId == -1) {
+            //找不到该文件
+            return false;
+        }
+        //单文件进行复制
+        string content = readFile(getFullPath(from));
+        touch(getFullPath(to), fileOrDir);
+        string toPath = getFullPath(to) + "/" + fileOrDir;
+        writeFile(toPath, content);
+        return true;
+    }
+
+    //需要复制的是一个文件夹
+
+    if (sfd[toLocation].getNextDir(fileOrDir) != -1 || sfd[toLocation].getFileInode(fileOrDir) != -1) {
+        //存在重名的文件夹 或者 存在与其重名的文件
+        return false;
+    }
+
+    dirNum++;
+    calculateDirAndFile(sfd[fromLocation].getNextDir(fileOrDir), dirNum, fileNum);
+
+    if (sb.getFreeDirNum() < dirNum) {
+        //空闲目录数不够
+        return false;
+    }
+
+    if (sb.getFreeInodeNum() < fileNum) {
+        //空闲i节点数不够
+        return false;
+    }
+    //在目的目录下创建文件夹
+    mkdir(getFullPath(to) + fileOrDir);
+    //将要复制的文件夹下的所有内容 复制到 新创建的文件夹下
+    cpCurrentDir(from, to + fileOrDir);
 
     return true;
+}
+
+void FileSystem::calculateDirAndFile(int id, int &dirNum, int &fileNum) {
+    vector<SFD_ITEM> allNext = sfd[id].getAllNext();
+    for (SFD_ITEM next: allNext) {
+        if (next.type == 1) {
+            //是文件
+            fileNum++;
+        } else {
+            //是文件夹
+            dirNum++;
+            calculateDirAndFile(next.id, dirNum, fileNum);
+        }
+    }
+}
+
+void FileSystem::cpCurrentDir(string from, string to) {
+    //from精确到文件夹名，to精确到目的文件夹
+    // 如/a目录下的b文件夹下的所有内容复制到/c目录下的b文件夹下
+    // from = /a/b
+    // to = /c/b
+    auto fromDirs = split(getFullPath(from), "/");
+
+    int id = findDir(fromDirs);
+    vector<SFD_ITEM> allNext = sfd[id].getAllNext();
+    for (SFD_ITEM next: allNext) {
+        string toPath = getFullPath(to) + "/" + next.name;
+        if (next.type == 1) {
+            //复制文件
+            string content = readFile(getFullPath(from) + next.name);
+            touch(getFullPath(to), next.name);
+            writeFile(toPath, content);
+        } else {
+            //复制文件夹
+            string fromPath = getFullPath(from) + "/" + next.name;
+            mkdir(toPath);
+            cpCurrentDir(fromPath, toPath);
+        }
+    }
 }
 
 bool FileSystem::mv(string from, string to) {
