@@ -1,0 +1,1 @@
+0 3 0 2 2 dddd 1 2 dir2 2 1 1 1 file2.txt 62 2 0 
