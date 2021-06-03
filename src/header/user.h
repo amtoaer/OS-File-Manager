@@ -66,7 +66,11 @@ public:
 class UserManage {
     User users[USERNUM];  //全部用户
     int user_num = 0;   //当前已有用户
+    void readFromFile(); //从文件读取
+
 public:
+    UserManage();
+
     bool addUser(string username, string userpwd);     //添加用户
     bool deleteUser(string username, string userpwd);  //注销用户
     bool login(string username, string userpwd);       //登陆用户

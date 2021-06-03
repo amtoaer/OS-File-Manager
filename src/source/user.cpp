@@ -17,6 +17,11 @@ vector<int> UserManage::getUserId() {
     return user_id;
 }
 
+UserManage::UserManage() {
+    // 尝试读取保存的文件
+    this->readFromFile();
+}
+
 bool UserManage::addUser(string username, string userpwd) {//注册一个用户
     for (int i = 0; i < USERNUM; i++) {
         if (users[i].getId() == -1) {
@@ -86,4 +91,20 @@ void UserManage::saveToFile() {
         }
     }
     outfile.close();
+}
+
+void UserManage::readFromFile() {
+    ifstream input;
+    input.open("../records/user.txt", ios::in);
+    if (!input.is_open()) {
+        return;
+    }
+    int id;
+    string username, password;
+    while (input >> id >> username >> password) {
+        users[id].setId(id);
+        users[id].setUsername(username);
+        users[id].setUserpwd(password);
+    }
+    input.close();
 }
