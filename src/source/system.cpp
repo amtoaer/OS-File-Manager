@@ -22,6 +22,22 @@ void FileSystem::format() {
     root_id = 0;
 }
 
+void FileSystem::cd(string filePath){
+    view.cur_path = getFullPath(filePath);
+    view.cur_sfd_id = fs.findDir(view.cur_path);
+}
+
+void FileSystem::goBack(){
+    auto dirs = split(view.cur_path,"/");
+    dirs.pop_back();
+    auto index = view.cur_path.find_last_of("/");
+    if (index==0){
+        index+=1;
+    }
+    view.cur_path = view.cur_path.substr(0,index);
+    view.cur_sfd_id = fs.findDir(dirs);
+}
+
 bool FileSystem::changeFileRWCT(string filePath, string userName, string jurisdiction) {
     //路径filePath精确到文件名，jurisdiction为修改后的权限名称
     //userName为被修改权限的用户名

@@ -84,6 +84,10 @@ public:
     // 写入文件（覆盖）
     bool writeFile(string filePath, string content);
 
+    void cd (string path);
+
+    void goBack();
+
     //追加到文件
     bool appendToFile(string filePath, string content);
 
