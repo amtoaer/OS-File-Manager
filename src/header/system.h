@@ -54,6 +54,10 @@ private:
     void saveDirInfo();
 
 public:
+    RWCT getRwct(int id) {
+        return diNode[id].getRWCT();
+    }
+
     // 默认初始化
     FileSystem();
 

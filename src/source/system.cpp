@@ -422,10 +422,17 @@ bool FileSystem::cp(string from, string to) {
             //找不到该文件
             return false;
         }
+        if (superBlock.getFreeInodeNum() < fileNum) {
+            //空闲i节点数不够
+            return false;
+        }
+
         //单文件进行复制
         string content = readFile(getFullPath(from));
+        RWCT currentRwct = diNode[findFile(getFullPath(from))].getRWCT(); // 得到当前文件权限
         string toPath = getFullPath(to) + "/" + fileOrDir;
         touch(toPath);
+        diNode[findFile(toPath)].setRwct(currentRwct);  // 设置新文件权限
         writeFile(toPath, content);
         return true;
     }
@@ -485,7 +492,9 @@ void FileSystem::cpCurrentDir(string from, string to) {
         if (next.type == 1) {
             //复制文件
             string content = readFile(getFullPath(from) + "/" + next.name);
+            RWCT currentRwct = diNode[next.id].getRWCT();   //得到当前文件权限
             touch(toPath);
+            diNode[findFile(toPath)].setRwct(currentRwct);  //设置新文件权限
             writeFile(toPath, content);
         } else {
             //复制文件夹
