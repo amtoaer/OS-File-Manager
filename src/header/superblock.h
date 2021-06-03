@@ -15,9 +15,11 @@ class SuperBlock {         //超级块结构
 private:
     int freeinode_num;      //空闲i结点总数
     vector<int> freeInode; //空闲i结点id数组
+    bool inodeBitmap[DINODENUM]; //i结点位示图
 
     int freedisk_num;        //空闲磁盘块块数
     int freeDiskStack[NICFREE + 1]; //成组链接空闲磁盘块
+    bool diskBitmap[DISKNUM];   //磁盘块位示图
 
     int freedir_num;
     bool sfdBitmap[SFDNUM];      //目录位示图   false:空  true:满
@@ -28,11 +30,23 @@ private:
     // 将磁盘块调入空闲磁盘块栈
     void copy(DiskBlock);
 
+    //将栈内容写入磁盘块
+    void writeStack(int loc);
+
     // 添加到空闲磁盘块栈
     void pushFreeDiskStack(int);
 
     // 移出空闲磁盘块栈
     int popFreeDiskStack();
+
+    //保存i结点空闲信息
+    void saveFreeInodeInfo();
+
+    //保存磁盘块空闲信息
+    void saveFreeDiskInfo();
+
+    //保存目录空闲信息
+    void saveFreeDirInfo();
 
 public:
     //格式化
@@ -70,8 +84,27 @@ public:
     int getFreeDiskNum() {
         return freedisk_num;
     }
-};
 
-extern SuperBlock sb;
+    //获取已占i结点数
+    int getUsedInodeNum();
+
+    //获取已占目录数
+    int getUsedDirNum();
+
+    //获取已占磁盘数
+    int getUsedDiskNum();
+
+    //保存信息到文件
+    void saveTofile();
+
+    //i结点是否被占用
+    bool isInodeUsed(int id);
+
+    //磁盘是否被占用
+    bool isDiskUsed(int id);
+
+    //目录是否被占用
+    bool isDirUsed(int id);
+};
 
 #endif //OS_FILE_MANAGER_SUPERBLOCK_H
