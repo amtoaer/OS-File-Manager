@@ -467,7 +467,7 @@ bool FileSystem::cp(string from, string to) {
 }
 
 void FileSystem::calculateDirAndFile(int id, int &dirNum, int &fileNum) {
-    vector <SFD_ITEM> allNext = sfd[id].getAllNext();
+    vector<SFD_ITEM> allNext = sfd[id].getAllNext();
     for (SFD_ITEM next: allNext) {
         if (next.type == 1) {
             //是文件
@@ -488,7 +488,7 @@ void FileSystem::cpCurrentDir(string from, string to) {
     auto fromDirs = split(getFullPath(from), "/");
 
     int id = findDir(fromDirs);
-    vector <SFD_ITEM> allNext = sfd[id].getAllNext();
+    vector<SFD_ITEM> allNext = sfd[id].getAllNext();
     for (SFD_ITEM next: allNext) {
         string toPath = getFullPath(to) + "/" + next.name;
         if (next.type == 1) {
@@ -586,7 +586,7 @@ bool FileSystem::rm(string filePath) {
     return true;
 }
 
-int FileSystem::findDir(vector <string> dirs) {
+int FileSystem::findDir(vector<string> dirs) {
     int cur_dir_id = root_id;
     int next_dir_id;
     for (string dirname:dirs) {
@@ -608,7 +608,7 @@ int FileSystem::findFile(string path) {
     if (path[0] != '/') {   //相对路径
         path = view.cur_path + '/' + path;
     }
-    vector <string> strs = split(path, "/");
+    vector<string> strs = split(path, "/");
 
     if (strs.size() == 0) {
         return -1;
@@ -973,4 +973,5 @@ bool FileSystem::rename(string path, string new_name) {
     }
 
     sfd[cur_dir_id].rename(item_id, new_name);
+    return true;
 }
