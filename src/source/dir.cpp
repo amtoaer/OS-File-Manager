@@ -18,6 +18,19 @@ int SFD::hasNext(string name) {
     return 0;
 }
 
+int SFD::getNext(string name) {
+    for (int i = 0; i < num; i++) {
+        if (dir[i].name == name) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+void SFD::rename(int id, string new_name) {
+    dir[id].name = new_name;
+}
+
 SFD_ITEM SFD::removeNext(string name) {
     for (int i = 0; i < num; i++) {
         if (dir[i].name == name) {

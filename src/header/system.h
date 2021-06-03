@@ -111,6 +111,9 @@ public:
     //获取SFD
     SFD getSFD(int id);
 
+    //文件 或 目录 重命名
+    bool rename(string path, string new_name);
+
 };
 
 extern FileSystem fs;

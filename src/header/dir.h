@@ -43,6 +43,11 @@ public:
     //获取下一级目录id 失败返回-1
     int getNextDir(string dirname);
 
+    //获取下一级文件或目录id 失败返回-1
+    int getNext(string name);
+
+    void rename(int id, string new_name);
+
     // 返回指定名称的文件/文件夹（不存在返回0,存在文件返回1,存在目录返回2）
     int hasNext(string name);
 
@@ -58,6 +63,7 @@ public:
     int getNum() {  //获取已存放量
         return num;
     }
+
 
     string toString();
 

@@ -458,7 +458,7 @@ bool FileSystem::cp(string from, string to) {
 }
 
 void FileSystem::calculateDirAndFile(int id, int &dirNum, int &fileNum) {
-    vector<SFD_ITEM> allNext = sfd[id].getAllNext();
+    vector <SFD_ITEM> allNext = sfd[id].getAllNext();
     for (SFD_ITEM next: allNext) {
         if (next.type == 1) {
             //是文件
@@ -479,7 +479,7 @@ void FileSystem::cpCurrentDir(string from, string to) {
     auto fromDirs = split(getFullPath(from), "/");
 
     int id = findDir(fromDirs);
-    vector<SFD_ITEM> allNext = sfd[id].getAllNext();
+    vector <SFD_ITEM> allNext = sfd[id].getAllNext();
     for (SFD_ITEM next: allNext) {
         string toPath = getFullPath(to) + "/" + next.name;
         if (next.type == 1) {
@@ -575,7 +575,7 @@ bool FileSystem::rm(string filePath) {
     return true;
 }
 
-int FileSystem::findDir(vector<string> dirs) {
+int FileSystem::findDir(vector <string> dirs) {
     int cur_dir_id = root_id;
     int next_dir_id;
     for (string dirname:dirs) {
@@ -597,7 +597,7 @@ int FileSystem::findFile(string path) {
     if (path[0] != '/') {   //相对路径
         path = view.cur_path + '/' + path;
     }
-    vector<string> strs = split(path, "/");
+    vector <string> strs = split(path, "/");
 
     if (strs.size() == 0) {
         return -1;
@@ -814,4 +814,39 @@ int FileSystem::getRootId() {
 
 SFD FileSystem::getSFD(int id) {
     return sfd[id];
+}
+
+bool FileSystem::rename(string path, string new_name) {
+    string dirpath, past_name;
+    //划分目录和文件
+    int split_id = path.length() - 1;
+    for (; split_id >= 0; split_id--) {
+        if (path[split_id] == '/')
+            break;
+    }
+    dirpath = path.substr(0, split_id);
+    past_name = path.substr(split_id + 1, path.length());
+
+    int cur_dir_id = findDir(dirpath);
+    if (cur_dir_id < 0) {
+        cout << "上级目录不存在，重命名失败!" << endl;
+        return false;
+    }
+
+    //检查文件或目录是否存在
+    int item_id = sfd[cur_dir_id].getNext(past_name);
+    if (item_id < 0) {
+        cout << "文件或目录不存在，重命名失败!" << endl;
+        return false;
+    }
+
+    //检查新命名的文件在当前目录下是否存在
+    for (SFD_ITEM item:sfd[cur_dir_id].getAllNext()) {
+        if ((item.name != past_name) && (item.name == new_name)) {
+            cout << "此目录下包含同名文件或目录" << endl;
+            return false;
+        }
+    }
+
+    sfd[cur_dir_id].rename(item_id, new_name);
 }
