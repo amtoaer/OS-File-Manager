@@ -37,6 +37,8 @@ class DiskBlock {
     friend class SuperBlock;
 
     FileContent file_cont;
+
+    int type;  //TEXTTYPE:1 INDEXTYPE:2
 public:
     DiskBlock() {};
 
@@ -57,6 +59,19 @@ public:
 
     //清空索引
     void clearIndex();
+
+    //设置类型
+    void setType(int type);
+
+    //获取类别
+    int getType();
+
+    //获取长度
+    int getLen();
+
+    //获取索引列表
+    vector<int> getIndexList();
+
 };
 
 #endif //OS_FILE_MANAGER_DISKBLOCK_H
