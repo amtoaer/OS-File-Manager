@@ -33,6 +33,14 @@ public:
         return id;
     }
 
+    string getUsername() {
+        return username;
+    }
+
+    string getPassword() {
+        return userpwd;
+    }
+
     void setId(int id) {
         this->id = id;
     }
@@ -63,6 +71,7 @@ public:
     User login(string username, string userpwd);       //登陆用户
     vector<int> getUserId();    //获取全部用户的id号
     int getId(string name);     //通过用户名得到id
+    void saveToFile();
 };
 
 extern UserManage user_mag;
