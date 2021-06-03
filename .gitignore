@@ -76,3 +76,6 @@ fabric.properties
 
 # CMake
 cmake-build-*/
+
+# QT
+*.user
