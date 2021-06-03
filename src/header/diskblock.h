@@ -69,6 +69,8 @@ public:
     //获取长度
     int getLen();
 
+    void setLen(int);
+
     //获取索引列表
     vector<int> getIndexList();
 
