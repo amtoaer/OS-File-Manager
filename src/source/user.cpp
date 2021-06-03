@@ -43,11 +43,12 @@ bool UserManage::deleteUser(string username, string userpwd) {//注销一个用�
     return false;//未在用户信息中查到此人
 }
 
-User UserManage::login(string username, string userpwd) {//用户登陆
-    for (auto &user : users) {
+bool UserManage::login(string username, string userpwd) {//用户登陆
+    for (User user : users) {
         if (user.isUsername(username)) {
             if (user.isUserpwd(userpwd)) {
-                return user;//登陆成功，用户为user
+                view.cur_user = user;
+                return true;//登陆成功，用户为user
             }
             return false;//密码错误
         }

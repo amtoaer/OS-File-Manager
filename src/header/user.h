@@ -7,6 +7,7 @@
 
 #include "config.h"
 #include <bits/stdc++.h>
+#include "view.h"
 
 using namespace std;
 
@@ -60,7 +61,7 @@ class UserManage {
 public:
     bool addUser(string username, string userpwd);     //添加用户
     bool deleteUser(string username, string userpwd);  //注销用户
-    User login(string username, string userpwd);       //登陆用户
+    bool login(string username, string userpwd);       //登陆用户
     vector<int> getUserId();    //获取全部用户的id号
     int getId(string name);     //通过用户名得到id
 };
