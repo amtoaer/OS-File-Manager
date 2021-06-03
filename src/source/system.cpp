@@ -11,7 +11,9 @@
 using namespace std;
 
 FileSystem::FileSystem() {
-
+    if (!readFromFile()) {
+        this->format();
+    }
 }
 
 void FileSystem::format() {
@@ -422,10 +424,17 @@ bool FileSystem::cp(string from, string to) {
             //找不到该文件
             return false;
         }
+        if (superBlock.getFreeInodeNum() < fileNum) {
+            //空闲i节点数不够
+            return false;
+        }
+
         //单文件进行复制
         string content = readFile(getFullPath(from));
+        RWCT currentRwct = diNode[findFile(getFullPath(from))].getRWCT(); // 得到当前文件权限
         string toPath = getFullPath(to) + "/" + fileOrDir;
         touch(toPath);
+        diNode[findFile(toPath)].setRwct(currentRwct);  // 设置新文件权限
         writeFile(toPath, content);
         return true;
     }
@@ -485,7 +494,9 @@ void FileSystem::cpCurrentDir(string from, string to) {
         if (next.type == 1) {
             //复制文件
             string content = readFile(getFullPath(from) + "/" + next.name);
+            RWCT currentRwct = diNode[next.id].getRWCT();   //得到当前文件权限
             touch(toPath);
+            diNode[findFile(toPath)].setRwct(currentRwct);  //设置新文件权限
             writeFile(toPath, content);
         } else {
             //复制文件夹
@@ -714,8 +725,7 @@ void FileSystem::saveInodeInfo() {
             //输出i结点信息
             outfile << i << " ";
             Dinode inode = diNode[i];
-            RWCT rwct;
-            rwct = inode.getRWCT();
+            auto rwct = inode.getRWCT();
             outfile << rwct.user_id << " ";
             int num = rwct.r_group.size();
             outfile << num << " ";
@@ -799,6 +809,120 @@ void FileSystem::saveDirInfo() {
         }
     }
     outfile.close();
+}
+
+bool FileSystem::readDiskInfo() {
+    ifstream input;
+    input.open("../records/userDisk.txt", ios::in);
+    if (!input.is_open()) {
+        return false;
+    }
+    int count;
+    input >> count;
+    while (count--) {
+        int no;
+        input >> no;
+        auto diskblock = diskBlock[no];
+        int type, len;
+        input >> type;
+        diskblock.setType(type);
+        input >> len;
+        diskblock.setLen(len);
+        if (type == TEXTTYPE) {
+            string content;
+            input >> content;
+            diskblock.writeText(content);
+        } else {
+            diskblock.clearIndex();
+            int tmp;
+            while (len--) {
+                input >> tmp;
+                diskblock.addIndex(tmp);
+            }
+        }
+    }
+    input.close();
+    return true;
+}
+
+bool FileSystem::readInodeInfo() {
+    ifstream input;
+    input.open("../records/userInode.txt", ios::in);
+    if (!input.is_open()) {
+        return false;
+    }
+    int count;
+    input >> count;
+    while (count--) {
+        int no;
+        input >> no;
+        auto node = diNode[no];
+        RWCT rwct;
+        input >> rwct.user_id;
+        int size, tmp;
+        input >> size;
+        while (size--) {
+            input >> tmp;
+            rwct.r_group.push_back(tmp);
+        }
+        input >> size;
+        while (size--) {
+            input >> tmp;
+            rwct.w_group.push_back(tmp);
+        }
+        input >> size;
+        while (size--) {
+            input >> tmp;
+            rwct.raw_group.push_back(tmp);
+        }
+        input >> size;
+        while (size--) {
+            input >> tmp;
+            rwct.null_group.push_back(tmp);
+        }
+        node.setRwct(rwct);
+        input >> tmp;
+        node.setSize(tmp);
+        input >> tmp;
+        node.setDiskBlockNum(tmp);
+        input >> tmp;
+        node.setDiskBlockId(tmp);
+        time_t tmpTime;
+        input >> tmpTime;
+        node.setModifiedTime(tmpTime);
+        input >> tmpTime;
+        node.setCreatedTime(tmpTime);
+    }
+    input.close();
+    return true;
+}
+
+bool FileSystem::readDirInfo() {
+    ifstream input;
+    input.open("../records/usedDir.txt", ios::in);
+    if (!input.is_open()) {
+        return false;
+    }
+    input >> root_id;
+    int count;
+    input >> count;
+    while (count--) {
+        int no, num;
+        input >> no >> num;
+        auto cur_sfd = sfd[no];
+        int type, id;
+        string name;
+        while (num--) {
+            input >> type >> name >> id;
+            cur_sfd.addItem(SFD_ITEM(type, name, id));
+        }
+    }
+    input.close();
+    return true;
+}
+
+bool FileSystem::readFromFile() {
+    return superBlock.readFromFile() & readInodeInfo() & readDiskInfo() & readDirInfo();
 }
 
 void FileSystem::saveToFile() {
