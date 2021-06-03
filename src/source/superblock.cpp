@@ -136,7 +136,7 @@ void SuperBlock::saveFreeInodeInfo() {
     //存空闲结点信息
     outfile.open("../records/freeIdode.txt", ios::out | ios::trunc);
     if (!outfile.is_open()) {
-        cout << "文件打开失败!" << endl;
+        cout << "文件打开失败readFreeDir!" << endl;
         return;
     }
     outfile << freeinode_num << " ";
@@ -146,13 +146,25 @@ void SuperBlock::saveFreeInodeInfo() {
     //存位示图信息
     outfile << DINODENUM << " ";
     for (int i = 0; i < DINODENUM; i++) {
-        if (inodeBitmap[i]) {
-            outfile << 1 << " ";
-        } else {
-            outfile << 0 << " ";
-        }
+        outfile << inodeBitmap[i] << " ";
     }
     outfile.close();
+}
+
+bool SuperBlock::readFreeInodeInfo() {
+    ifstream input;
+    input.open("../records/freeInode.txt", ios::in);
+    if (!input.is_open()) {
+        return false;
+    }
+    input >> freeinode_num;
+    int tmp;
+    for (int i = 0; i < DINODENUM; i++) {
+        input >> tmp;
+        inodeBitmap[i] = tmp;
+    }
+    input.close();
+    return true;
 }
 
 void SuperBlock::saveFreeDiskInfo() {
@@ -171,17 +183,32 @@ void SuperBlock::saveFreeDiskInfo() {
         diskBitmap[id] = false;
         id = getFreeDiskBlock();
     }
-
-    outfile << DISKNUM << " ";
     for (int i = 0; i < DISKNUM; i++) {
-        if (diskBitmap[i]) {
-            outfile << 1 << " ";
-        } else {
-            outfile << 0 << " ";
-        }
+        outfile << diskBitmap[i] << " ";
     }
 
     outfile.close();
+}
+
+bool SuperBlock::readFreeDiskInfo() {
+    ifstream input;
+    input.open("../records/freeDisk.txt", ios::in);
+    if (!input.is_open()) {
+        return false;
+    }
+    int count, tmp;
+    input >> count;
+    while (count--) {
+        input >> tmp;
+        recycleDiskBlock(tmp);
+    }
+    input >> count;
+    for (int i = 0; i < DISKNUM; i++) {
+        input >> tmp;
+        diskBitmap[i] = tmp;
+    }
+    input.close();
+    return true;
 }
 
 void SuperBlock::saveFreeDirInfo() {
@@ -193,15 +220,26 @@ void SuperBlock::saveFreeDirInfo() {
         return;
     }
     outfile << freedir_num << " ";
-    outfile << DIRNUM << " ";
     for (int i = 0; i < DIRNUM; i++) {
-        if (sfdBitmap[i]) {
-            outfile << 1 << " ";
-        } else {
-            outfile << 0 << " ";
-        }
+        outfile << sfdBitmap[i] << " ";
     }
     outfile.close();
+}
+
+bool SuperBlock::readFreeDirInfo() {
+    ifstream input;
+    input.open("../records/freeDir.txt", ios::in);
+    if (!input.is_open()) {
+        return false;
+    }
+    input >> freedir_num;
+    int tmp;
+    for (int i = 0; i < DIRNUM; i++) {
+        input >> tmp;
+        sfdBitmap[i] = tmp;
+    }
+    input.close();
+    return true;
 }
 
 int SuperBlock::getUsedInodeNum() {
@@ -235,6 +273,10 @@ void SuperBlock::saveTofile() {
     saveFreeInodeInfo();
     saveFreeDiskInfo();
     saveFreeDirInfo();
+}
+
+bool SuperBlock::readFromFile() {
+    return readFreeDirInfo() & readFreeDiskInfo() & readFreeInodeInfo();
 }
 
 bool SuperBlock::isInodeUsed(int id) {

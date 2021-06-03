@@ -59,6 +59,12 @@ int DiskBlock::getLen() {
     }
 }
 
+void DiskBlock::setLen(int len) {
+    if (type == INDEXTYPE) {
+        file_cont.index.n = len;
+    }
+}
+
 vector<int> DiskBlock::getIndexList() {
     vector<int> res;
     for (int i = 0; i < file_cont.index.n; i++) {

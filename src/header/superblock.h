@@ -42,11 +42,20 @@ private:
     //保存i结点空闲信息
     void saveFreeInodeInfo();
 
+    // 读取i结点空闲信息
+    bool readFreeInodeInfo();
+
     //保存磁盘块空闲信息
     void saveFreeDiskInfo();
 
+    // 读取磁盘块空闲信息
+    bool readFreeDiskInfo();
+
     //保存目录空闲信息
     void saveFreeDirInfo();
+
+    // 读取目录空闲信息
+    bool readFreeDirInfo();
 
 public:
     //格式化
@@ -96,6 +105,9 @@ public:
 
     //保存信息到文件
     void saveTofile();
+
+    // 从文件读取
+    bool readFromFile();
 
     //i结点是否被占用
     bool isInodeUsed(int id);

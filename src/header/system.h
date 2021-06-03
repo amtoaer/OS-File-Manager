@@ -47,11 +47,19 @@ private:
     //保存i结点内容
     void saveInodeInfo();
 
+    bool readInodeInfo();
+
     //保存磁盘块内容
     void saveDiskInfo();
 
+    bool readDiskInfo();
+
     //保存目录内容
     void saveDirInfo();
+
+    bool readDirInfo();
+
+    bool readFromFile();
 
 public:
     RWCT getRwct(int id) {
@@ -60,9 +68,6 @@ public:
 
     // 默认初始化
     FileSystem();
-
-    // 通过输入流初始化
-    FileSystem(istream input);
 
     //格式化
     void format();
