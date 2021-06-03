@@ -424,8 +424,8 @@ bool FileSystem::cp(string from, string to) {
         }
         //单文件进行复制
         string content = readFile(getFullPath(from));
-        touch(getFullPath(to), fileOrDir);
         string toPath = getFullPath(to) + "/" + fileOrDir;
+        touch(toPath);
         writeFile(toPath, content);
         return true;
     }
@@ -486,7 +486,7 @@ void FileSystem::cpCurrentDir(string from, string to) {
         if (next.type == 1) {
             //复制文件
             string content = readFile(getFullPath(from) + next.name);
-            touch(getFullPath(to), next.name);
+            touch(getFullPath(to) + "/" + next.name);
             writeFile(toPath, content);
         } else {
             //复制文件夹
@@ -574,6 +574,7 @@ bool FileSystem::rm(string filePath) {
         // 移除父文件夹的该条记录
         sfd[location].removeNext(name);
     }
+    return true;
 }
 
 int FileSystem::findDir(vector<string> dirs) {
