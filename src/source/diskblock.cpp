@@ -42,3 +42,27 @@ int DiskBlock::getDinodeId(int nth) {
 void DiskBlock::clearIndex() {
     file_cont.index.n = 0;
 }
+
+void DiskBlock::setType(int type) {
+    this->type = type;
+}
+
+int DiskBlock::getType() {
+    return type;
+}
+
+int DiskBlock::getLen() {
+    if (type == TEXTTYPE) {
+        return file_cont.doc.n;
+    } else {
+        return file_cont.index.n;
+    }
+}
+
+vector<int> DiskBlock::getIndexList() {
+    vector<int> res;
+    for (int i = 0; i < file_cont.index.n; i++) {
+        res.push_back(file_cont.index.p[i]);
+    }
+    return res;
+}
