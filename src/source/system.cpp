@@ -452,9 +452,9 @@ bool FileSystem::cp(string from, string to) {
         return false;
     }
     //在目的目录下创建文件夹
-    mkdir(getFullPath(to) + fileOrDir);
+    mkdir(getFullPath(to) + "/" + fileOrDir);
     //将要复制的文件夹下的所有内容 复制到 新创建的文件夹下
-    cpCurrentDir(from, to + fileOrDir);
+    cpCurrentDir(from, to + "/" + fileOrDir);
 
     return true;
 }
@@ -474,7 +474,6 @@ void FileSystem::calculateDirAndFile(int id, int &dirNum, int &fileNum) {
 }
 
 void FileSystem::cpCurrentDir(string from, string to) {
-    /*
     //from精确到文件夹名，to精确到目的文件夹
     // 如/a目录下的b文件夹下的所有内容复制到/c目录下的b文件夹下
     // from = /a/b
@@ -487,8 +486,8 @@ void FileSystem::cpCurrentDir(string from, string to) {
         string toPath = getFullPath(to) + "/" + next.name;
         if (next.type == 1) {
             //复制文件
-            string content = readFile(getFullPath(from) + next.name);
-            touch(getFullPath(to) + "/" + next.name);
+            string content = readFile(getFullPath(from) + "/" + next.name);
+            touch(toPath);
             writeFile(toPath, content);
         } else {
             //复制文件夹
@@ -497,7 +496,6 @@ void FileSystem::cpCurrentDir(string from, string to) {
             cpCurrentDir(fromPath, toPath);
         }
     }
-     */
 }
 
 bool FileSystem::mv(string from, string to) {
