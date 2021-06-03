@@ -66,3 +66,11 @@ int SFD::getFileInode(string filename) {
     }
     return inode_id;
 }
+
+string SFD::toString() {
+    string res = "";
+    for (int i = 0; i < num; i++) {
+        res += to_string(dir[i].type) + " " + dir[i].name + " " + to_string(dir[i].id) + " ";
+    }
+    return res;
+}
