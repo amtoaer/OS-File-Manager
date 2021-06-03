@@ -102,6 +102,10 @@ public:
         ctime = created_time;
     }
 
+    RWCT getRWCT() {
+        return rwct;
+    }
+
     int getSize() {
         return i_size;
     }
@@ -121,6 +125,16 @@ public:
     time_t getCreatedTime() {
         return ctime;
     }
+
+    //转换为字符串
+    string toString();
+
+    //当前用户是否能写文件
+    bool canWrite(int id);
+
+    //当前用户是否能读文件
+    bool canRead(int id);
+
 
 };
 
