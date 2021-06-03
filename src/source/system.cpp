@@ -890,11 +890,11 @@ bool FileSystem::readInodeInfo() {
     return true;
 }
 
-void FileSystem::readDirInfo() {
+bool FileSystem::readDirInfo() {
     ifstream input;
     input.open("../records/usedDir.txt", ios::in);
     if (!input.is_open()) {
-        return;
+        return false;
     }
     input >> root_id;
     int count;
@@ -911,6 +911,7 @@ void FileSystem::readDirInfo() {
         }
     }
     input.close();
+    return true;
 }
 
 bool FileSystem::readFromFile() {
