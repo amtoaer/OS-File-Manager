@@ -3,8 +3,8 @@
 //
 
 #include "../header/user.h"
-#include "../header/view.h"
 #include "../header/system.h"
+#include "../header/view.h"
 
 
 vector<int> UserManage::getUserId() {

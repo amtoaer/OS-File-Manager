@@ -7,7 +7,6 @@
 
 #include "config.h"
 #include <bits/stdc++.h>
-#include "view.h"
 
 using namespace std;
 
