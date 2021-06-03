@@ -6,6 +6,7 @@
 #include "../header/view.h"
 #include "../header/utils.h"
 #include <bits/stdc++.h>
+#include <fstream>
 
 using namespace std;
 
@@ -86,7 +87,7 @@ bool FileSystem::mkdir(string dir) {
         // 同名文件夹已存在
         return false;
     }
-    int freeDirID = sb.getFreeDir();
+    int freeDirID = superBlock.getFreeDir();
     if (freeDirID == -1) {
         // 无空闲目录
         return false;
@@ -133,11 +134,15 @@ bool FileSystem::touch(string filePath) {
         cout << "磁盘空间不足，文件创建失败!" << endl;
         return false;
     }
+    diskBlock[diskblock_id].setType(INDEXTYPE);
+    diskBlock[diskblock_id].clearIndex();
 
     //分配i结点
     int inode_id = superBlock.getFreeInode();
-    if (inode_id <= 0) {
+    if (inode_id < 0) {
         cout << "i结点已用完，文件创建失败!" << endl;
+        //回收磁盘块
+        superBlock.recycleDiskBlock(diskblock_id);
         return false;
     }
 
@@ -208,6 +213,7 @@ void FileSystem::writeToDiskBlock(vector<int> applied_disk, int inode_id, int st
             diNode[inode_id].setDiskBlockId(applied_disk[i]);
             direct_disk_id = applied_disk[i];
             diskBlock[direct_disk_id].clearIndex();
+            diskBlock[direct_disk_id].setType(INDEXTYPE);
             //设置修改时间
             time_t timep;
             time(&timep);
@@ -216,32 +222,41 @@ void FileSystem::writeToDiskBlock(vector<int> applied_disk, int inode_id, int st
             string substr = content.substr(write_start, BLOCKSIZE - 1);
             int disk_id = applied_disk[i];
             diskBlock[disk_id].writeText(substr);
+            diskBlock[disk_id].setType(TEXTTYPE);
             write_start += BLOCKSIZE - 1;
-            diskBlock[direct_disk_id].addIndex(disk_id);
+            if (i != start_block)
+                diskBlock[direct_disk_id].addIndex(disk_id);
         } else if (i == one_index) {
             one_disk_id = applied_disk[i];
             diskBlock[direct_disk_id].addIndex(one_disk_id);
             diskBlock[one_disk_id].clearIndex();
+            diskBlock[one_disk_id].setType(INDEXTYPE);
         } else if (i < two_index) { //一次间址
             string substr = content.substr(write_start, BLOCKSIZE - 1);
             int disk_id = applied_disk[i];
             diskBlock[disk_id].writeText(substr);
+            diskBlock[disk_id].setType(TEXTTYPE);
             write_start += BLOCKSIZE - 1;
-            diskBlock[one_disk_id].addIndex(disk_id);
+            if (i != start_block)
+                diskBlock[one_disk_id].addIndex(disk_id);
         } else if (i == two_index) {
             two_disk_id = applied_disk[i];
             diskBlock[direct_disk_id].addIndex(two_disk_id);
             diskBlock[two_disk_id].clearIndex();
+            diskBlock[two_disk_id].setType(INDEXTYPE);
         } else if ((i - two_index - 1) % (BLOCKIDNUM + 1) == 0) { //二次间址的索引
             two_disk_nth = applied_disk[i];
             diskBlock[two_disk_id].addIndex(two_disk_nth);
             diskBlock[two_disk_nth].clearIndex();
+            diskBlock[two_disk_nth].setType(INDEXTYPE);
         } else {
             string substr = content.substr(write_start, BLOCKSIZE - 1);
             int disk_id = applied_disk[i];
             diskBlock[disk_id].writeText(substr);
+            diskBlock[disk_id].setType(TEXTTYPE);
             write_start += BLOCKSIZE - 1;
-            diskBlock[two_disk_nth].addIndex(disk_id);
+            if (i != start_block)
+                diskBlock[two_disk_nth].addIndex(disk_id);
         }
     }
 
@@ -251,6 +266,10 @@ bool FileSystem::writeFile(string filePath, string content) {
     int inode_id = findFile(filePath);
     if (inode_id < 0) {
         cout << "文件不存在，文件查找失败!" << endl;
+        return false;
+    }
+    if (!diNode[inode_id].canWrite(view.cur_user.getId())) {
+        //无写权限
         return false;
     }
 
@@ -295,6 +314,11 @@ bool FileSystem::appendToFile(string filePath, string content) {
     int inode_id = findFile(filePath);
     if (inode_id < 0) {
         cout << "文件不存在，文件查找失败!" << endl;
+        return false;
+    }
+
+    if (!diNode[inode_id].canWrite(view.cur_user.getId())) {
+        //无写权限
         return false;
     }
 
@@ -344,6 +368,12 @@ string FileSystem::readFile(string filePath) {
     if (inode_id < 0) {
         return "";
     }
+
+    if (!diNode[inode_id].canRead(view.cur_user.getId())) {
+        //无读权限
+        return "";
+    }
+
     vector<int> diskblock_id = getFileContentDiskIds(inode_id);
     string content = "";
     char temp[BLOCKSIZE + 1];
@@ -410,12 +440,12 @@ bool FileSystem::cp(string from, string to) {
     dirNum++;
     calculateDirAndFile(sfd[fromLocation].getNextDir(fileOrDir), dirNum, fileNum);
 
-    if (sb.getFreeDirNum() < dirNum) {
+    if (superBlock.getFreeDirNum() < dirNum) {
         //空闲目录数不够
         return false;
     }
 
-    if (sb.getFreeInodeNum() < fileNum) {
+    if (superBlock.getFreeInodeNum() < fileNum) {
         //空闲i节点数不够
         return false;
     }
@@ -442,6 +472,7 @@ void FileSystem::calculateDirAndFile(int id, int &dirNum, int &fileNum) {
 }
 
 void FileSystem::cpCurrentDir(string from, string to) {
+    /*
     //from精确到文件夹名，to精确到目的文件夹
     // 如/a目录下的b文件夹下的所有内容复制到/c目录下的b文件夹下
     // from = /a/b
@@ -464,6 +495,7 @@ void FileSystem::cpCurrentDir(string from, string to) {
             cpCurrentDir(fromPath, toPath);
         }
     }
+     */
 }
 
 bool FileSystem::mv(string from, string to) {
@@ -524,10 +556,10 @@ bool FileSystem::rm(string filePath) {
         // 通过inode找到磁盘块id并遍历回收
         auto ids = getFileDiskIds(inode);
         for (int i:ids) {
-            sb.recycleDiskBlock(i);
+            superBlock.recycleDiskBlock(i);
         }
         // 回收inode
-        sb.recycleInode(inode);
+        superBlock.recycleInode(inode);
         // 移除父文件夹的该条记录
         sfd[location].removeNext(name);
     } else {
@@ -538,7 +570,7 @@ bool FileSystem::rm(string filePath) {
             rm(filePath + "/" + i.name);
         }
         // 回收dir
-        sb.recycleDir(dir);
+        superBlock.recycleDir(dir);
         // 移除父文件夹的该条记录
         sfd[location].removeNext(name);
     }
@@ -667,4 +699,120 @@ int FileSystem::calculateDiskNum(int len) {
         n = file_num + 3 + a;
     }
     return n;
+}
+
+void FileSystem::saveInodeInfo() {
+    ofstream outfile;
+    outfile.open("../records/usedIdode.txt", ios::out | ios::trunc);
+    if (!outfile.is_open()) {
+        cout << "文件打开失败!" << endl;
+        return;
+    }
+    int inode_num = superBlock.getUsedInodeNum();
+    outfile << inode_num << " ";
+    for (int i = 0; i < DINODENUM; i++) {
+        if (superBlock.isInodeUsed(i)) {
+            //输出i结点信息
+            outfile << i << " ";
+            Dinode inode = diNode[i];
+            RWCT rwct;
+            rwct = inode.getRWCT();
+            outfile << rwct.user_id << " ";
+            int num = rwct.r_group.size();
+            outfile << num << " ";
+            for (int user_id:rwct.r_group) {
+                outfile << user_id << " ";
+            }
+            num = rwct.w_group.size();
+            outfile << num << " ";
+            for (int user_id:rwct.w_group) {
+                outfile << user_id << " ";
+            }
+            num = rwct.raw_group.size();
+            outfile << num << " ";
+            for (int user_id:rwct.raw_group) {
+                outfile << user_id << " ";
+            }
+            num = rwct.null_group.size();
+            outfile << num << " ";
+            for (int user_id:rwct.null_group) {
+                outfile << user_id << " ";
+            }
+            outfile << inode.getSize() << " ";
+            outfile << inode.getDiskblockNum() << " ";
+            outfile << inode.getDiskblockId() << " ";
+            outfile << inode.getModifiedTime() << " ";
+            outfile << inode.getCreatedTime() << " ";
+        }
+    }
+    outfile.close();
+}
+
+void FileSystem::saveDiskInfo() {
+    ofstream outfile;
+    outfile.open("../records/usedDisk.txt", ios::out | ios::trunc);
+    if (!outfile.is_open()) {
+        cout << "文件打开失败!" << endl;
+        return;
+    }
+    int disk_num = superBlock.getUsedDiskNum();
+    outfile << disk_num << " ";
+    for (int i = 0; i < DISKNUM; i++) {
+        if (superBlock.isDiskUsed(i)) {
+            outfile << i << " ";
+            DiskBlock diskblock = diskBlock[i];
+            int type = diskblock.getType();
+            outfile << type << " ";
+            int len = diskblock.getLen();
+            outfile << len << " ";
+            if (type == TEXTTYPE) {
+                char content[BLOCKSIZE + 1];
+                diskblock.getText(content);
+                outfile << content << " ";
+            } else {
+                vector<int> indexList = diskblock.getIndexList();
+                for (int index:indexList) {
+                    outfile << index << " ";
+                }
+            }
+        }
+    }
+    outfile.close();
+}
+
+void FileSystem::saveDirInfo() {
+    ofstream outfile;
+    outfile.open("../records/usedDir.txt", ios::out | ios::trunc);
+    if (!outfile.is_open()) {
+        cout << "文件打开失败!" << endl;
+        return;
+    }
+    outfile << root_id << " ";
+    int dir_num = superBlock.getUsedDirNum();
+    outfile << dir_num << " ";
+    for (int i = 0; i < DIRNUM; i++) {
+        if (superBlock.isDirUsed(i)) {
+            SFD cur_sfd = sfd[i];
+            int num = cur_sfd.getNum();
+            outfile << i << " ";
+            outfile << num << " ";
+            outfile << cur_sfd.toString();
+        }
+    }
+    outfile.close();
+}
+
+void FileSystem::saveToFile() {
+    superBlock.saveTofile();
+    saveInodeInfo();
+    saveDiskInfo();
+    saveDirInfo();
+}
+
+int FileSystem::getRootId() {
+    return root_id;
+}
+
+SFD FileSystem::getSFD(int id) {
+    return sfd[id];
 }

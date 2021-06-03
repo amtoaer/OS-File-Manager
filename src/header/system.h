@@ -16,6 +16,8 @@ using namespace std;
 
 class FileSystem {             //文件系统结构
 private:
+    friend class SuperBlock;
+
     SuperBlock superBlock;          //超级块
     Dinode diNode[DINODENUM];       //i结点
     DiskBlock diskBlock[DISKNUM];   //磁盘块
@@ -41,6 +43,15 @@ private:
 
     //将文件内容写到磁盘块
     void writeToDiskBlock(vector<int> applied_disk, int inode_i, int start_block, string content);
+
+    //保存i结点内容
+    void saveInodeInfo();
+
+    //保存磁盘块内容
+    void saveDiskInfo();
+
+    //保存目录内容
+    void saveDirInfo();
 
 public:
     // 默认初始化
@@ -90,6 +101,15 @@ public:
 
     // 返回对应位置的磁盘块
     DiskBlock getDiskBlock(int index);
+
+    //退出前保存
+    void saveToFile();
+
+    //获取根目录id
+    int getRootId();
+
+    //获取SFD
+    SFD getSFD(int id);
 
 };
 
