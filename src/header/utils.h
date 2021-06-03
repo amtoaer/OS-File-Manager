@@ -10,5 +10,6 @@
 using namespace std;
 
 vector<string> split(string str, string pattern);
+string next(string name);
 
 #endif //OS_FILE_MANAGER_UTILS_H

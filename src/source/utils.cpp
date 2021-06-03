@@ -3,7 +3,9 @@
 //
 
 #include "../header/utils.h"
+#include "../header/view.h"
 
+extern View view;
 
 vector <string> split(string str, string pattern) {
     string::size_type pos;
@@ -22,4 +24,11 @@ vector <string> split(string str, string pattern) {
         }
     }
     return result;
+}
+
+string next(string name){
+    if (view.cur_path.at(view.cur_path.size()-1)=='/'){
+        return view.cur_path+name;
+    }
+    return view.cur_path+"/"+name;
 }
