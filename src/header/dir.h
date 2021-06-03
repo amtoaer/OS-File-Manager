@@ -59,6 +59,8 @@ public:
         return num;
     }
 
+    string toString();
+
 };
 
 #endif //OS_FILE_MANAGER_DIR_H

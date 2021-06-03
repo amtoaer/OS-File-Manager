@@ -10,7 +10,7 @@
 
 struct View {
     User cur_user;  //当前用户
-    SFD cur_dir;    //当前目录
+    int cur_sfd_id;    //当前目录
     string cur_path;//当前路径 /a/b/c
 };
 

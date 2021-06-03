@@ -17,6 +17,13 @@ void SuperBlock::copy(DiskBlock db) {
     }
 }
 
+void SuperBlock::writeStack(int loc) {
+    fs.diskBlock[loc].file_cont.index.n = freeDiskStack[0];
+    for (int i = 1; i <= NICFREE; i++) {
+        fs.diskBlock[loc].file_cont.index.p[i - 1] = freeDiskStack[i];
+    }
+}
+
 void SuperBlock::pushFreeDiskStack(int loc) {
     freedisk_num++;
     freeDiskStack[0]++;
@@ -36,6 +43,7 @@ void SuperBlock::format() {
     for (int i = 0; i < DINODENUM; i++) {
         freeInode.push_back(i);
     }
+    memset(inodeBitmap, false, sizeof(inodeBitmap));
 
     //初始化空闲磁盘块信息
     freedisk_num = 0;
@@ -45,6 +53,7 @@ void SuperBlock::format() {
     for (int i = 0; i < DISKNUM; i++) {
         recycleDiskBlock(i);
     }
+    memset(diskBitmap, false, sizeof(diskBitmap));
 
     //初始化目录块信息
     freedir_num = DIRNUM - 1;
@@ -56,7 +65,8 @@ void SuperBlock::format() {
 void SuperBlock::recycleDiskBlock(int loc) {
     if (freeDiskStack[0] == NICFREE) {
         // 如果已满则拷贝空闲磁盘块栈
-        fs.getDiskBlock(loc).copy(freeDiskStack);
+        //fs.getDiskBlock(loc).copy(freeDiskStack);
+        writeStack(loc);
         // 清空当前空闲磁盘块栈
         clearFreeDiskStack(loc);
         freedisk_num++;
@@ -64,6 +74,7 @@ void SuperBlock::recycleDiskBlock(int loc) {
         // 添加到磁盘块栈
         pushFreeDiskStack(loc);
     }
+    diskBitmap[loc] = false;
 }
 
 int SuperBlock::getFreeDiskBlock() {
@@ -76,22 +87,28 @@ int SuperBlock::getFreeDiskBlock() {
         // 调入磁盘栈
         this->copy(fs.getDiskBlock(freeDiskStack[1]));
         freedisk_num--;
+        diskBitmap[free] = true;
         return free;
     } else {
-        return popFreeDiskStack();
+        int free = popFreeDiskStack();
+        diskBitmap[free] = true;
+        return free;
     }
+
 }
 
 int SuperBlock::getFreeInode() {
     if (freeinode_num > 0) {
         int id = freeInode[--freeinode_num];
         freeInode.pop_back();
+        inodeBitmap[id] = true;
         return id;
     }
     return -1;
 }
 
 void SuperBlock::recycleInode(int inode) {
+    inodeBitmap[inode] = false;
     freeinode_num++;
     freeInode.push_back(inode);
 }
@@ -112,4 +129,122 @@ int SuperBlock::getFreeDir() {
 void SuperBlock::recycleDir(int dir) {
     freedir_num++;
     sfdBitmap[dir] = false;
+}
+
+void SuperBlock::saveFreeInodeInfo() {
+    ofstream outfile;
+    //存空闲结点信息
+    outfile.open("../records/freeIdode.txt", ios::out | ios::trunc);
+    if (!outfile.is_open()) {
+        cout << "文件打开失败!" << endl;
+        return;
+    }
+    outfile << freeinode_num << " ";
+    for (int i = 0; i < freeInode.size(); i++) {
+        outfile << freeInode[i] << " ";
+    }
+    //存位示图信息
+    outfile << DINODENUM << " ";
+    for (int i = 0; i < DINODENUM; i++) {
+        if (inodeBitmap[i]) {
+            outfile << 1 << " ";
+        } else {
+            outfile << 0 << " ";
+        }
+    }
+    outfile.close();
+}
+
+void SuperBlock::saveFreeDiskInfo() {
+    ofstream outfile;
+    //存空闲块信息
+    outfile.open("../records/freeDisk.txt", ios::out | ios::trunc);
+    if (!outfile.is_open()) {
+        cout << "文件打开失败!" << endl;
+        return;
+    }
+    outfile << freedisk_num << " ";
+
+    int id = getFreeDiskBlock();
+    while (id != -1) {
+        outfile << id << " ";
+        diskBitmap[id] = false;
+        id = getFreeDiskBlock();
+    }
+
+    outfile << DISKNUM << " ";
+    for (int i = 0; i < DISKNUM; i++) {
+        if (diskBitmap[i]) {
+            outfile << 1 << " ";
+        } else {
+            outfile << 0 << " ";
+        }
+    }
+
+    outfile.close();
+}
+
+void SuperBlock::saveFreeDirInfo() {
+    ofstream outfile;
+    //存空闲块信息
+    outfile.open("../records/freeDir.txt", ios::out | ios::trunc);
+    if (!outfile.is_open()) {
+        cout << "文件打开失败!" << endl;
+        return;
+    }
+    outfile << freedir_num << " ";
+    outfile << DIRNUM << " ";
+    for (int i = 0; i < DIRNUM; i++) {
+        if (sfdBitmap[i]) {
+            outfile << 1 << " ";
+        } else {
+            outfile << 0 << " ";
+        }
+    }
+    outfile.close();
+}
+
+int SuperBlock::getUsedInodeNum() {
+    int sum = 0;
+    for (int i = 0; i < DINODENUM; i++) {
+        if (inodeBitmap[i])
+            sum++;
+    }
+    return sum;
+}
+
+int SuperBlock::getUsedDirNum() {
+    int sum = 0;
+    for (int i = 0; i < DIRNUM; i++) {
+        if (sfdBitmap[i])
+            sum++;
+    }
+    return sum;
+}
+
+int SuperBlock::getUsedDiskNum() {
+    int sum = 0;
+    for (int i = 0; i < DISKNUM; i++) {
+        if (diskBitmap[i])
+            sum++;
+    }
+    return sum;
+}
+
+void SuperBlock::saveTofile() {
+    saveFreeInodeInfo();
+    saveFreeDiskInfo();
+    saveFreeDirInfo();
+}
+
+bool SuperBlock::isInodeUsed(int id) {
+    return inodeBitmap[id];
+}
+
+bool SuperBlock::isDiskUsed(int id) {
+    return diskBitmap[id];
+}
+
+bool SuperBlock::isDirUsed(int id) {
+    return sfdBitmap[id];
 }

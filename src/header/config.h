@@ -15,5 +15,7 @@
 #define DIRNUM  50         //每个目录下允许嵌套的最大数
 #define FILETYPE    1       //目录项为文件类型
 #define DIRTYPE     2       //目录项为目录类型
+#define TEXTTYPE    1       //磁盘块内容为文本
+#define INDEXTYPE   2       //磁盘块内容为索引
 
 #endif //OS_FILE_MANAGER_CONFIG_H
