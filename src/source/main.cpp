@@ -3,16 +3,14 @@
 //
 #include <iostream>
 #include "../header/view.h"
-#include "../header/superblock.h"
 #include "../header/system.h"
 
 using namespace std;
 
 View view;  //当前状态
 UserManage user_mag;   //用户管理
-SuperBlock sb;
-FileSystem fs;
+FileSystem fs;  //文件系统
 
 int main() {
-    cout << "hello world!" << endl;
+    return 0;
 }
