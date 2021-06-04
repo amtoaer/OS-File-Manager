@@ -193,6 +193,10 @@ bool FileSystem::touch(string filePath) {
     return true;
 }
 
+Dinode FileSystem::getDiNode(int id){
+    return diNode[id];
+}
+
 void FileSystem::writeToDiskBlock(vector<int> applied_disk, int inode_id, int start_block, string content) {
     int direct_index = 0; //直接索引块编号
     int one_index = BLOCKIDNUM - 1; //一次间址索引块编号
@@ -433,6 +437,11 @@ bool FileSystem::cp(string from, string to) {
 
     int fileNum = 0, dirNum = 0;
 
+    if (sfd[toLocation].getNextDir(fileOrDir) != -1 || sfd[toLocation].getFileInode(fileOrDir) != -1) {
+        //存在重名的文件夹 或者 存在与其重名的文件
+        return false;
+    }
+
     if (sfd[fromLocation].getNextDir(fileOrDir) == -1) {//该名称不是一个文件夹
         fileNum = 1;
         int fileId = findFile(getFullPath(from));
@@ -457,10 +466,6 @@ bool FileSystem::cp(string from, string to) {
 
     //需要复制的是一个文件夹
 
-    if (sfd[toLocation].getNextDir(fileOrDir) != -1 || sfd[toLocation].getFileInode(fileOrDir) != -1) {
-        //存在重名的文件夹 或者 存在与其重名的文件
-        return false;
-    }
 
     dirNum++;
     calculateDirAndFile(sfd[fromLocation].getNextDir(fileOrDir), dirNum, fileNum);
