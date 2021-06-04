@@ -17,6 +17,16 @@ vector<int> UserManage::getUserId() {
     return user_id;
 }
 
+vector<string> UserManage::getUserName(){
+    vector<string>usernames;
+    for (int i=0;i<USERNUM;i++){
+        if (users[i].getId()!=-1){
+            usernames.push_back(users[i].getUsername());
+        }
+    }
+    return usernames;
+}
+
 UserManage::UserManage() {
     // 尝试读取保存的文件
     this->readFromFile();
@@ -74,6 +84,13 @@ int UserManage::getId(string name) { //通过用户名得到用户id
         }
     }
     return -1;
+}
+
+string UserManage::getName(int id){
+    if (id>=0&&id<=7&&users[id].getId()!=-1){
+        return users[id].getUsername();
+    }
+    return "";
 }
 
 void UserManage::saveToFile() {

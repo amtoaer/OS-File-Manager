@@ -70,6 +70,13 @@
        </spacer>
       </item>
       <item>
+       <widget class="QPushButton" name="save">
+        <property name="text">
+         <string>保存</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="logout">
         <property name="text">
          <string>注销</string>

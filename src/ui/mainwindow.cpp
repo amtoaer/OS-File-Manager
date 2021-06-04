@@ -28,6 +28,8 @@ MainWindow::MainWindow(QWidget *parent) :
     auto cut = itemMenu->addAction("剪切");
     auto rename = itemMenu->addAction("重命名");
     auto remove = itemMenu->addAction("删除");
+    auto seeJurisdiction = itemMenu->addAction("查看权限");
+    auto editJurisdiction = itemMenu->addAction("修改权限");
     connect(mkdir,SIGNAL(triggered(bool)),this,SLOT(mkdir()));
     connect(touch,SIGNAL(triggered(bool)),this,SLOT(touch()));
     connect(pasteAct,SIGNAL(triggered(bool)),this,SLOT(paste()));
@@ -37,6 +39,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(rename,SIGNAL(triggered(bool)),this,SLOT(rename()));
     connect(remove,SIGNAL(triggered(bool)),this,SLOT(remove()));
     connect(edit,SIGNAL(triggered(bool)),this,SLOT(edit()));
+    connect(seeJurisdiction,SIGNAL(triggered(bool)),this,SLOT(seeJurisdiction()));
+    connect(editJurisdiction,SIGNAL(triggered(bool)),this,SLOT(editJurisdiction()));
     ui->listView->setModel(model);
     ui->listView->setWrapping(true);
     ui->listView->setSelectionMode(QAbstractItemView::SingleSelection);
@@ -185,6 +189,62 @@ void MainWindow::remove(){
     updateView();
 }
 
+void MainWindow::seeJurisdiction(){
+    auto item = model->itemFromIndex(ui->listView->selectionModel()->selectedIndexes().at(0));
+    auto name = item->text();
+    auto type = item->whatsThis();
+    if (type=="dir"){
+        QMessageBox::critical(this,"错误","只有文件支持权限查看");
+        return;
+    }
+    auto path = next(name.toStdString());
+    auto rwct = fs.getRwct(fs.findFile(path));
+    auto r= QStringList();
+    auto w = QStringList();
+    auto rw = QStringList();
+    auto no = QStringList();
+    for (auto item:rwct.null_group){
+        no.append(QString::fromStdString(user_mag.getName(item)));
+    }
+    for (auto item: rwct.r_group){
+        r.append(QString::fromStdString(user_mag.getName(item)));
+    }
+    for (auto item:rwct.raw_group){
+        rw.append(QString::fromStdString(user_mag.getName(item)));
+    }
+    for (auto item:rwct.w_group){
+        w.append(QString::fromStdString(user_mag.getName(item)));
+    }
+    auto message = "读权限列表："+r.join("、")+"\n"+"写权限列表："+w.join("、")+"\n"+"读写权限列表："+rw.join("、")+"\n"+"无权限列表："+no.join("、");
+    QMessageBox::information(this,"提示",message);
+}
+
+void MainWindow::editJurisdiction(){
+    auto item = model->itemFromIndex(ui->listView->selectionModel()->selectedIndexes().at(0));
+    auto name = item->text();
+    auto type = item->whatsThis();
+    if (type=="dir"){
+        QMessageBox::critical(this,"错误","只有文件支持权限编辑");
+        return;
+    }
+    auto path =next(name.toStdString());
+    bool ok = false;
+    auto list = QStringList();
+    for (auto item:user_mag.getUserName()){
+        list.append(QString::fromStdString(item));
+    }
+    auto text = QInputDialog::getText(this,"提示","请输入要修改权限的用户名：",QLineEdit::Normal,list.join("、"),&ok);
+    if (ok&&!text.isEmpty()){
+        auto jurisdiction = QInputDialog::getText(this,"提示","请输入要修改为的权限：",QLineEdit::Normal,"or、ow、raw、no",&ok);
+        if (ok&&!jurisdiction.isEmpty()){
+            auto result = fs.changeFileRWCT(path,text.toStdString(),jurisdiction.toStdString());
+            if (!result){
+                QMessageBox::critical(this,"错误","修改权限失败，请确保您拥有此文件");
+            }
+        }
+    }
+}
+
 void MainWindow::on_listView_customContextMenuRequested(const QPoint &pos)
 {
     auto selectItem = ui->listView->selectionModel()->selectedIndexes().empty();
@@ -200,5 +260,12 @@ void MainWindow::on_pushButton_clicked()
 {
     fs.goBack();
     updateView();
+}
+
+
+void MainWindow::on_save_clicked()
+{
+    fs.saveToFile();
+    user_mag.saveToFile();
 }
 
