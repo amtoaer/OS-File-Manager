@@ -18,15 +18,14 @@ struct RWCT {    //读写控制块
     list<int> null_group;   //无权限组
 };
 
-class Dinode {            //磁盘i结点
+class Dinode {            //i结点
 private:
     RWCT rwct;          //读写控制表
-    int i_size;            //文件大小
-    int diskblock_num;  //文件占用磁盘块个数
-    int diskblock_id;   //第一块磁盘块id
-    time_t mtime;   //文件最后修改时间
-    time_t ctime;   //文件创建时间
-    //关联文件数? 其他属性？
+    int i_size;          //文件大小
+    int diskblock_num;   //文件占用磁盘块个数
+    int diskblock_id;    //第一块磁盘块id
+    time_t mtime;        //文件最后修改时间
+    time_t ctime;        //文件创建时间
 public:
     Dinode() {
         i_size = 0;
