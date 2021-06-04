@@ -37,6 +37,10 @@ private slots:
 
     void edit();
 
+    void seeJurisdiction();
+
+    void editJurisdiction();
+
     void on_logout_clicked();
 
     void on_listView_customContextMenuRequested(const QPoint &pos);
