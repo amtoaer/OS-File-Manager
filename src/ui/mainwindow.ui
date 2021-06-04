@@ -102,6 +102,13 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <tabstops>
+  <tabstop>save</tabstop>
+  <tabstop>logout</tabstop>
+  <tabstop>pushButton</tabstop>
+  <tabstop>currentPath</tabstop>
+  <tabstop>listView</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

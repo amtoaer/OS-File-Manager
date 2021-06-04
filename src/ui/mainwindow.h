@@ -49,6 +49,8 @@ private slots:
 
     void on_save_clicked();
 
+    void on_listView_doubleClicked(const QModelIndex &index);
+
 signals:
     void logout();
     void quit();

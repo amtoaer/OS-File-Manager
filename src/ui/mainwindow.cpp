@@ -267,5 +267,21 @@ void MainWindow::on_save_clicked()
 {
     fs.saveToFile();
     user_mag.saveToFile();
+    QMessageBox::information(this,"提示","保存完成");
+}
+
+
+void MainWindow::on_listView_doubleClicked(const QModelIndex &index)
+{
+    auto item = model->itemFromIndex(index);
+    auto type = item->whatsThis();
+    auto name = item->text();
+    if (type=="dir"){
+        fs.cd(next(name.toStdString()));
+        updateView();
+    }else{
+        auto content =fs.readFile(next(name.toStdString()));
+        QMessageBox::information(this,"文件内容",QString::fromStdString(content));
+    }
 }
 
