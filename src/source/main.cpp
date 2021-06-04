@@ -21,7 +21,9 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     LoginWindow w;
+    w.setWindowTitle("登录");
     MainWindow m;
+    m.setWindowTitle("文件系统");
     w.show();
     QObject::connect(&w,SIGNAL(login()),&m,SLOT(onLogin()));
     QObject::connect(&m,SIGNAL(logout()),&w,SLOT(onLogout()));
