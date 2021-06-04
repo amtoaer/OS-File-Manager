@@ -11,7 +11,7 @@ SuperBlock::SuperBlock() {
 
     freedisk_num = 0;
     // 初始化空闲磁盘块栈
-    clearFreeDiskStack();
+    clearFreeDiskStack(-1);
 
     freedir_num = 0;
 }
