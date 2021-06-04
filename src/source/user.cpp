@@ -119,6 +119,7 @@ void UserManage::readFromFile() {
     int count,id;
     string username, password;
     input>>count;
+    user_num=count;
     while (count--) {
         input >> id >> username >> password;
         users[id].setId(id);
