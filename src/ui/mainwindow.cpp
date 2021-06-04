@@ -1,5 +1,6 @@
 #include <QStandardItem>
 #include <QInputDialog>
+#include <QDateTime>
 #include <QMessageBox>
 
 #include "mainwindow.h"
@@ -75,6 +76,14 @@ void MainWindow::updateView(){
         auto type = item.type==1?"file":"dir";
         auto qitem = new QStandardItem(QIcon(iconPath),QString::fromStdString(item.name));
         qitem->setWhatsThis(type);
+        if (item.type==1){
+        auto dnode = fs.getDiNode(item.id);
+        auto size = QString::fromStdString(std::to_string(dnode.getSize()));
+        auto createTime = QDateTime::fromTime_t(dnode.getCreatedTime()).toString("yyyy-MM-dd hh:mm:ss");
+        auto modifyTime = QDateTime::fromTime_t(dnode.getModifiedTime()).toString("yyyy-MM-dd hh:mm:ss");
+        auto info = QString("文件大小：%1\n文件创建时间：%2\n文件修改时间：%3").arg(size,createTime,modifyTime);
+        qitem->setToolTip(info);
+        }
         model->appendRow(qitem);
     }
 }
@@ -167,6 +176,7 @@ void MainWindow::edit(){
             if (!result){
                 QMessageBox::critical(this,"错误","保存失败");
             }
+            updateView();
         }
     }else{
         QMessageBox::critical(this,"错误","只有文件支持编辑");
@@ -241,6 +251,7 @@ void MainWindow::editJurisdiction(){
             if (!result){
                 QMessageBox::critical(this,"错误","修改权限失败，请确保您拥有此文件");
             }
+            updateView();
         }
     }
 }
