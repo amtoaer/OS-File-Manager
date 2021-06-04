@@ -58,6 +58,8 @@ private:
     bool readFreeDirInfo();
 
 public:
+    SuperBlock();
+
     //格式化
     void format();
 

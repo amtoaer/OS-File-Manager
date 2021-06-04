@@ -99,6 +99,8 @@ void UserManage::readFromFile() {
     if (!input.is_open()) {
         return;
     }
+    int count;
+    input >> count;
     int id;
     string username, password;
     while (input >> id >> username >> password) {

@@ -22,19 +22,19 @@ void FileSystem::format() {
     root_id = 0;
 }
 
-void FileSystem::cd(string filePath){
+void FileSystem::cd(string filePath) {
     view.cur_path = getFullPath(filePath);
     view.cur_sfd_id = fs.findDir(view.cur_path);
 }
 
-void FileSystem::goBack(){
-    auto dirs = split(view.cur_path,"/");
+void FileSystem::goBack() {
+    auto dirs = split(view.cur_path, "/");
     dirs.pop_back();
     auto index = view.cur_path.find_last_of("/");
-    if (index==0){
-        index+=1;
+    if (index == 0) {
+        index += 1;
     }
-    view.cur_path = view.cur_path.substr(0,index);
+    view.cur_path = view.cur_path.substr(0, index);
     view.cur_sfd_id = fs.findDir(dirs);
 }
 
@@ -483,7 +483,7 @@ bool FileSystem::cp(string from, string to) {
 }
 
 void FileSystem::calculateDirAndFile(int id, int &dirNum, int &fileNum) {
-    vector<SFD_ITEM> allNext = sfd[id].getAllNext();
+    vector <SFD_ITEM> allNext = sfd[id].getAllNext();
     for (SFD_ITEM next: allNext) {
         if (next.type == 1) {
             //是文件
@@ -504,7 +504,7 @@ void FileSystem::cpCurrentDir(string from, string to) {
     auto fromDirs = split(getFullPath(from), "/");
 
     int id = findDir(fromDirs);
-    vector<SFD_ITEM> allNext = sfd[id].getAllNext();
+    vector <SFD_ITEM> allNext = sfd[id].getAllNext();
     for (SFD_ITEM next: allNext) {
         string toPath = getFullPath(to) + "/" + next.name;
         if (next.type == 1) {
@@ -602,7 +602,7 @@ bool FileSystem::rm(string filePath) {
     return true;
 }
 
-int FileSystem::findDir(vector<string> dirs) {
+int FileSystem::findDir(vector <string> dirs) {
     int cur_dir_id = root_id;
     int next_dir_id;
     for (string dirname:dirs) {
@@ -624,7 +624,7 @@ int FileSystem::findFile(string path) {
     if (path[0] != '/') {   //相对路径
         path = view.cur_path + '/' + path;
     }
-    vector<string> strs = split(path, "/");
+    vector <string> strs = split(path, "/");
 
     if (strs.size() == 0) {
         return -1;
@@ -729,7 +729,7 @@ int FileSystem::calculateDiskNum(int len) {
 
 void FileSystem::saveInodeInfo() {
     ofstream outfile;
-    outfile.open("../records/usedIdode.txt", ios::out | ios::trunc);
+    outfile.open("../records/usedInode.txt", ios::out | ios::trunc);
     if (!outfile.is_open()) {
         cout << "文件打开失败!" << endl;
         return;
@@ -829,7 +829,7 @@ void FileSystem::saveDirInfo() {
 
 bool FileSystem::readDiskInfo() {
     ifstream input;
-    input.open("../records/userDisk.txt", ios::in);
+    input.open("../records/usedDisk.txt", ios::in);
     if (!input.is_open()) {
         return false;
     }
@@ -838,7 +838,7 @@ bool FileSystem::readDiskInfo() {
     while (count--) {
         int no;
         input >> no;
-        auto diskblock = diskBlock[no];
+        DiskBlock &diskblock = diskBlock[no];
         int type, len;
         input >> type;
         diskblock.setType(type);
@@ -863,7 +863,7 @@ bool FileSystem::readDiskInfo() {
 
 bool FileSystem::readInodeInfo() {
     ifstream input;
-    input.open("../records/userInode.txt", ios::in);
+    input.open("../records/usedInode.txt", ios::in);
     if (!input.is_open()) {
         return false;
     }
@@ -872,7 +872,7 @@ bool FileSystem::readInodeInfo() {
     while (count--) {
         int no;
         input >> no;
-        auto node = diNode[no];
+        Dinode &node = diNode[no];  //引用
         RWCT rwct;
         input >> rwct.user_id;
         int size, tmp;
@@ -925,7 +925,7 @@ bool FileSystem::readDirInfo() {
     while (count--) {
         int no, num;
         input >> no >> num;
-        auto cur_sfd = sfd[no];
+        SFD &cur_sfd = sfd[no];
         int type, id;
         string name;
         while (num--) {
