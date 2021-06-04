@@ -5,6 +5,17 @@
 #include "../header/superblock.h"
 #include "../header/system.h"
 
+SuperBlock::SuperBlock() {
+    freeinode_num = 0;
+    freeInode.clear();
+
+    freedisk_num = 0;
+    // 初始化空闲磁盘块栈
+    clearFreeDiskStack();
+
+    freedir_num = 0;
+}
+
 void SuperBlock::clearFreeDiskStack(int next = -1) {
     freeDiskStack[0] = 1;
     freeDiskStack[1] = next;
@@ -134,7 +145,7 @@ void SuperBlock::recycleDir(int dir) {
 void SuperBlock::saveFreeInodeInfo() {
     ofstream outfile;
     //存空闲结点信息
-    outfile.open("../records/freeIdode.txt", ios::out | ios::trunc);
+    outfile.open("../records/freeInode.txt", ios::out | ios::trunc);
     if (!outfile.is_open()) {
         cout << "文件打开失败readFreeDir!" << endl;
         return;
@@ -159,6 +170,11 @@ bool SuperBlock::readFreeInodeInfo() {
     }
     input >> freeinode_num;
     int tmp;
+    for (int i = 0; i < freeinode_num; i++) {
+        input >> tmp;
+        freeInode.push_back(tmp);
+    }
+    input >> tmp;   //忽略
     for (int i = 0; i < DINODENUM; i++) {
         input >> tmp;
         inodeBitmap[i] = tmp;
@@ -202,7 +218,6 @@ bool SuperBlock::readFreeDiskInfo() {
         input >> tmp;
         recycleDiskBlock(tmp);
     }
-    input >> count;
     for (int i = 0; i < DISKNUM; i++) {
         input >> tmp;
         diskBitmap[i] = tmp;
