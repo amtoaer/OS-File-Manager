@@ -73,6 +73,12 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <tabstops>
+  <tabstop>username</tabstop>
+  <tabstop>password</tabstop>
+  <tabstop>signIn</tabstop>
+  <tabstop>signUp</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
