@@ -24,6 +24,7 @@ private:
     SFD sfd[SFDNUM];                //目录块
     int root_id = 0;    //根目录默认占用
 
+    //获取绝对路径
     string getFullPath(string);
 
     //获取文件所占磁盘块id集合
@@ -47,18 +48,22 @@ private:
     //保存i结点内容
     void saveInodeInfo();
 
+    //读取i结点内容
     bool readInodeInfo();
 
     //保存磁盘块内容
     void saveDiskInfo();
 
+    //读取磁盘块内容
     bool readDiskInfo();
 
     //保存目录内容
     void saveDirInfo();
 
+    //读取目录内容
     bool readDirInfo();
 
+    //从电脑文件中读取信息
     bool readFromFile();
 
 public:
@@ -84,8 +89,10 @@ public:
     // 写入文件（覆盖）
     bool writeFile(string filePath, string content);
 
-    void cd (string path);
+    //目录切换
+    void cd(string path);
 
+    //回到上一级目录
     void goBack();
 
     //追加到文件
@@ -104,7 +111,7 @@ public:
     bool mv(string from, string to);
 
     //查找目录 返回目录id
-    int findDir(vector<string>);
+    int findDir(vector <string>);
 
     // 查找目录字符串 返回目录id
     int findDir(string);
@@ -124,6 +131,7 @@ public:
     //获取SFD
     SFD getSFD(int id);
 
+    //获取i结点
     Dinode getDiNode(int id);
 
     //文件 或 目录 重命名
